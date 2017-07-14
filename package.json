@@ -1,14 +1,13 @@
 {
-  "name": "copycat-api",
-  "version": "1.0.0",
-  "description": "CopyCat public API definitions",
-  "main": "index.js",
+  "name": "@spirale-tech/copycat-sdk",
+  "version": "0.0.3",
+  "description": "CopyCat public SDK",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "copycat-api"
+    "url": "https://github.com/spirale-tech/copycat-sdk.git"
   },
   "author": "Jonathan Neve (Spirale Technologies)",
   "license": "ISC"

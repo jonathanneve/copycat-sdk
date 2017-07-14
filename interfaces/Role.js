@@ -1,0 +1,1 @@
+//# sourceMappingURL=c:/git/copycat-sdk/interfaces/Role.js.map
