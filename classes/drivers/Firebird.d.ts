@@ -1,0 +1,42 @@
+import { ReplicationRecord } from "../Driver";
+import * as DB from "../DB";
+import { SQLDriver } from '../SQLDriver';
+import { TableOptions } from '../../interfaces/Nodes';
+export declare class FirebirdDriver extends SQLDriver {
+    protected fbConnection: any;
+    private tableDefs;
+    connectionParams: {
+        database: string;
+        username: string;
+        password: string;
+        role: string;
+    };
+    constructor();
+    isConnected(): boolean;
+    connect(): void;
+    disconnect(): void;
+    inTransaction(): boolean;
+    startTransaction(): void;
+    commit(): void;
+    rollback(): void;
+    getDataTypesOfFields(tableName: string, keyName: string[]): DB.DataType[];
+    private parseDateTime(value);
+    parseFieldValue(dataType: DB.DataType, fieldValue: string): Object;
+    convertAPIFieldType(sqlType: number): DB.DataType;
+    getFieldType(sqlType: number): DB.DataType;
+    private convertDataType(sqlType, subType);
+    checkRowExists(record: ReplicationRecord): boolean;
+    executeSQL(sql: string, fetchResultSet: boolean, callback?: (record: DB.Record) => boolean | void, params?: Object[]): boolean;
+    dropTable(tableName: string): void;
+    tableExists(tableName: string): boolean;
+    triggerExists(triggerName: string): boolean;
+    getTriggerName(tableName: string): string;
+    getDBVersion(): number;
+    getTriggerSQL(tableOptions: TableOptions, callback: (triggerName: string, sql: string) => void): void;
+    dropTriggers(tableName: string): void;
+    private getFieldDef(field);
+    createTable(tableDef: DB.TableDefinition): void;
+    customMetadataExists(objectName: string, objectType: string): boolean;
+    createCustomMetadata(metadata: DB.CustomMetadataDefinition): void;
+    setReplicatingNode(origNode: string): void;
+}

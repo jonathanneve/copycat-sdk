@@ -1,22 +1,24 @@
 {
   "compilerOptions": {
-    "baseUrl": "",
-    "declaration": false,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "lib": ["es6", "dom"],
-    "mapRoot": "./",
-    "module": "es6",
-    "moduleResolution": "node",
+    "target": "es6",
+    "module": "commonjs",
     "sourceMap": true,
-    "target": "es5",
-    "typeRoots": [
-      "../node_modules/@types"
-    ]
+    "declaration": true,
+    "moduleResolution": "node",
+    "sourceRoot": "src",
+    "lib": [
+            "es5",
+            "es6",
+            "es2015.collection",
+            "es2015.promise",
+            "es2015.core"
+        ]
   },
   "include": [
-    "**/*.ts"
+    "classes/**/*.ts",
+    "interfaces/**/*.ts"
   ],
   "exclude": [
+     "node_modules"
   ]
 }

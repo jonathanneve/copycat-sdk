@@ -1,8 +1,9 @@
-import {Driver} from '../utils/Driver';
+import {Driver} from '../classes/Driver';
+import {Node} from './Nodes';
 
 export class ClientConfiguration{
-    userID: number;
-    configID: number;
+    username: string;
+    configName: string;
     localNode: Node;
     localDatabase: Driver;
     cloudNodeName: string = 'CLOUD';    

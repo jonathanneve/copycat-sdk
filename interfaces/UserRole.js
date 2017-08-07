@@ -1,7 +1,6 @@
-var UserRole = (function () {
-    function UserRole() {
-    }
-    return UserRole;
-}());
-export { UserRole };
-//# sourceMappingURL=c:/git/copycat-sdk/interfaces/UserRole.js.map
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+class UserRole {
+}
+exports.UserRole = UserRole;
+//# sourceMappingURL=UserRole.js.map

@@ -1,5 +1,5 @@
 export class Plan {
-    id: number;
+    planID: number;
     name: string;
     monthlyPrice: number;
     description: string;

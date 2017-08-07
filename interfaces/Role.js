@@ -1,1 +1,1 @@
-//# sourceMappingURL=c:/git/copycat-sdk/interfaces/Role.js.map
+//# sourceMappingURL=Role.js.map
