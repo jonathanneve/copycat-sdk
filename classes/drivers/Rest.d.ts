@@ -1,13 +1,14 @@
 import { Driver, ReplicationBlock } from "../Driver";
-import { NodeConfig } from "../../interfaces/Nodes";
+import { Node } from "../../interfaces/Nodes";
 export declare class RestClient extends Driver {
     userName: string;
     configName: string;
+    accessToken: string;
     baseURL: string;
     private httpClient;
     private restClient;
-    constructor(userName: string, configName: string, baseURL: string);
-    getNodeConfig(nodeConfigName: string): Promise<NodeConfig>;
+    constructor(userName: string, configName: string, accessToken: string, baseURL: string);
+    getNode(nodeConfigName: string): Promise<Node>;
     getTransactionsToReplicate(destNode: string): Promise<number[]>;
     getRowsToReplicate(destNode: string, transaction_number: number, minCode: number): Promise<ReplicationBlock>;
     validateBlock(transactionNumber: number, maxCode: number, destNode: string): Promise<void>;

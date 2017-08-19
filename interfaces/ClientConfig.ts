@@ -4,10 +4,10 @@ import {Node} from './Nodes';
 export class ClientConfiguration{
     username: string;
     configName: string;
-    localNode: Node;
+    accessToken: string;
+    localNode?: Node;
     localDatabase: Driver;
-    cloudNodeName: string = 'CLOUD';    
-    cloudURL: string;    
+    cloudURL?: string;
     
     static createFromJson(json: any): ClientConfiguration {
         json.localDatabase = Driver.createFromJson(json.localDatabase);        

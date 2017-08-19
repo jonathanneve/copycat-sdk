@@ -3,9 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Driver_1 = require("../classes/Driver");
 const Nodes_1 = require("./Nodes");
 class ClientConfiguration {
-    constructor() {
-        this.cloudNodeName = 'CLOUD';
-    }
     static createFromJson(json) {
         json.localDatabase = Driver_1.Driver.createFromJson(json.localDatabase);
         json.localNode = Object.assign(new Nodes_1.Node(), json.localNode);

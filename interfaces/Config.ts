@@ -1,11 +1,12 @@
 
 import {Driver} from '../classes/Driver'
-import {NodeConfig} from './Nodes'
+import {Node} from './Nodes'
 
 export class Configuration{
     configName: string;
     username: string;
-    nodeConfigs: NodeConfig[];
+    description: string;
+    nodes: Node[];
     cloudDatabase: Driver;
     recordVersionsToKeepInCloud: number = 0;
     static createFromJson(json: any): Configuration {

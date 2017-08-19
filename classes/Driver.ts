@@ -1,5 +1,4 @@
 import * as DB from "./DB"
-import {TableOptions} from '../interfaces/Nodes'
 import {IDriver} from '../interfaces/Driver'
 
 export class ReplicationRecord {

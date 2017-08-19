@@ -13,15 +13,16 @@ const http = require("typed-rest-client/HttpClient");
 const rest = require("typed-rest-client/RestClient");
 console.log('rest');
 class RestClient extends Driver_1.Driver {
-    constructor(userName, configName, baseURL) {
+    constructor(userName, configName, accessToken, baseURL) {
         super();
         this.userName = userName;
         this.configName = configName;
+        this.accessToken = accessToken;
         this.baseURL = baseURL;
         this.httpClient = new http.HttpClient('');
         this.restClient = new rest.RestClient('');
     }
-    getNodeConfig(nodeConfigName) {
+    getNode(nodeConfigName) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.doGet(this.baseURL + '/api/v1/users/' + this.userName + '/configs/' + this.configName
                 + '/node_configs/' + nodeConfigName);

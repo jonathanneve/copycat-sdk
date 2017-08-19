@@ -12,13 +12,13 @@ const Rest_1 = require("./Drivers/Rest");
 class Replicator {
     constructor(localConf) {
         this.localConfig = localConf;
-        this.cloudConnection = new Rest_1.RestClient(this.localConfig.username, this.localConfig.configName, this.localConfig.cloudURL);
+        this.cloudConnection = new Rest_1.RestClient(this.localConfig.username, this.localConfig.configName, this.localConfig.accessToken, this.localConfig.cloudURL);
     }
     refreshConfig() {
         return __awaiter(this, void 0, void 0, function* () {
-            //Fetch node type configuration from cloud and store it in config object
-            this.nodeConfig = yield this.cloudConnection.getNodeConfig(this.localConfig.localNode.nodeConfigName);
-            this.cloudNodeConfig = yield this.cloudConnection.getNodeConfig('CLOUD');
+            //Fetch node configuration from cloud and store it in config object
+            this.node = yield this.cloudConnection.getNode(this.localConfig.localNode.accessToken);
+            //this.cloudNodeConfig = await this.cloudConnection.getNodeConfig('CLOUD');
         });
     }
     initializeLocalNode() {
@@ -26,30 +26,29 @@ class Replicator {
             yield this.refreshConfig();
             let localDB = this.localConfig.localDatabase;
             yield localDB.initReplicationMetadata();
-            let localToCloud = this.nodeConfig.destinationNodeConfigs.find(nodeConf => nodeConf.nodeConfigName == 'CLOUD');
-            if (localToCloud) {
-                //TODO: add triggers for all tables if localToCloud.tables is undefined
+            if (this.node.syncToCloud) {
+                //TODO: add triggers for all tables if syncToCloud.tables is undefined
                 //Create triggers for each table, based on configuration 
-                for (let tableOptions of localToCloud.tables) {
+                for (let tableOptions of this.node.syncToCloud.tables) {
                     localDB.createTriggers(tableOptions);
                 }
                 ;
-                localDB.addNode(this.localConfig.cloudNodeName);
+                localDB.addNode('CLOUD');
             }
         });
     }
     replicate() {
         return __awaiter(this, void 0, void 0, function* () {
             let doRepl = (srcDB, srcNode, destDB, destNode) => __awaiter(this, void 0, void 0, function* () {
-                let transactions = yield this.localConfig.localDatabase.getTransactionsToReplicate(destNode);
+                let transactions = yield srcDB.getTransactionsToReplicate(destNode);
                 if (transactions) {
                     for (let trNumber of transactions) {
                         let block;
                         do {
-                            block = yield this.localConfig.localDatabase.getRowsToReplicate(destNode, trNumber, (block ? block.maxCode : -1));
+                            block = yield srcDB.getRowsToReplicate(destNode, trNumber, (block ? block.maxCode : -1));
                             if (block.records.length > 0) {
                                 yield destDB.replicateBlock(srcNode, block);
-                                yield this.localConfig.localDatabase.validateBlock(block.transactionID, block.maxCode, destNode);
+                                yield srcDB.validateBlock(block.transactionID, block.maxCode, destNode);
                             }
                         } while (!block.transactionFinished);
                     }
@@ -57,10 +56,10 @@ class Replicator {
                 }
             });
             yield this.refreshConfig();
-            if (this.nodeConfig.destinationNodeConfigs.find(nodeConf => nodeConf.nodeConfigName == 'CLOUD'))
-                yield doRepl(this.localConfig.localDatabase, this.localConfig.localNode.nodeName, this.cloudConnection, this.localConfig.cloudNodeName);
-            if (this.cloudNodeConfig.destinationNodeConfigs.find(nodeConf => nodeConf.nodeConfigName == this.nodeConfig.name))
-                yield doRepl(this.cloudConnection, this.localConfig.cloudNodeName, this.localConfig.localDatabase, this.localConfig.localNode.nodeName);
+            if (this.node.syncToCloud)
+                yield doRepl(this.localConfig.localDatabase, this.localConfig.localNode.nodeName, this.cloudConnection, 'CLOUD');
+            if (this.node.syncFromCloud)
+                yield doRepl(this.cloudConnection, 'CLOUD', this.localConfig.localDatabase, this.localConfig.localNode.nodeName);
         });
     }
 }

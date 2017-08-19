@@ -1,29 +1,33 @@
-export class TableOptions {
+export class TableOptions{
     tableName: string;
-    excludedFields: string[];
-    includedFields: string[];
+    excludedFields?: string[];
+    includedFields?: string[];
 }
 
-export class ReplicationConfig{
-    nodeConfigName: string;
+
+//If both tables and excludedTables are empty, replicate all tables
+export class ReplicationOptions{
+    replicate: boolean;
     tables?: TableOptions[];
     excludedTables?: string[];    
 }
 
-export class NodeConfig{
-    name: string;
-    description: string;
-    replFrequency: number;
-    destinationNodeConfigs: ReplicationConfig[];
-}
-
 export class Node{
     username: string;
-    configID: number;
-    nodeID: number;
-    nodeConfigName: string;
+    configName: string;
+    nodeName: string; 
+    accessToken: string;
+    syncToCloud: ReplicationOptions = { replicate: true };
+    syncFromCloud: ReplicationOptions = { replicate: false };
     lastReplication?: Date;
-    get nodeName(): string {
-        return this.nodeConfigName + '_' + this.nodeID.toString();
+
+    getTableSyncLabel(direction: string): string {
+        let replOptions = (direction === "TO") ? this.syncToCloud : this.syncFromCloud;
+        if (!replOptions.replicate)
+            return "Nothing";
+        else if (replOptions.tables.length == 0)
+            return "Everything";
+        else
+            return "[Selected tables]";
     }
 }

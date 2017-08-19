@@ -1,6 +1,6 @@
 import {Driver, ReplicationBlock, ReplicationRecord, addDriver} from "../Driver"
 import {SQLDriver} from '../SQLDriver'
-import {NodeConfig} from "../../interfaces/Nodes"
+import {Node} from "../../interfaces/Nodes"
 import * as DB from "../DB"
 import * as http from 'typed-rest-client/HttpClient';
 import * as rest from 'typed-rest-client/RestClient';
@@ -16,13 +16,13 @@ export class RestClient extends Driver {
     private httpClient: http.HttpClient;
     private restClient: rest.RestClient;
 
-    constructor(public userName: string, public configName: string, public baseURL: string) {
+    constructor(public userName: string, public configName: string, public accessToken: string, public baseURL: string) {
         super();        
         this.httpClient = new http.HttpClient('');
         this.restClient = new rest.RestClient('');
     }
-    async getNodeConfig(nodeConfigName: string): Promise<NodeConfig> {
-        return await this.doGet<NodeConfig>(this.baseURL + '/api/v1/users/' + this.userName + '/configs/' + this.configName 
+    async getNode(nodeConfigName: string): Promise<Node> {
+        return await this.doGet<Node>(this.baseURL + '/api/v1/users/' + this.userName + '/configs/' + this.configName 
             + '/node_configs/' + nodeConfigName);
     }
 
