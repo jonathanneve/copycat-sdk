@@ -95,10 +95,8 @@ class SQLDriver extends Driver_1.Driver {
         this.getTriggerSQL(tableOptions, (triggerName, sql) => {
             if (!this.triggerExists(triggerName))
                 this.exec(sql);
+            return true;
         });
-    }
-    dropTriggers(tableName) {
-        throw new Error('Method not implemented.');
     }
     //REPLICATION FEATURES
     //LOCAL TO REMOTE

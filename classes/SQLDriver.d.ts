@@ -15,7 +15,6 @@ export declare abstract class SQLDriver extends Driver {
     private processParams(sql, resultParams, namedParams?, unnamedParams?);
     protected query(sql: string, namedParams?: DB.Field[], unnamedParams?: Object[], callback?: (record: DB.Record) => boolean | void): boolean;
     protected exec(sql: string, namedParams?: DB.Field[], unnamedParams?: Object[]): void;
-    protected abstract createTable(tableDef: DB.TableDefinition): void;
     protected abstract dropTable(tableName: string): void;
     protected abstract tableExists(tableName: string): boolean;
     protected abstract customMetadataExists(objectName: string, objectType: string): boolean;
@@ -23,11 +22,11 @@ export declare abstract class SQLDriver extends Driver {
     addNode(nodeName: string): void;
     initReplicationMetadata(): Promise<void>;
     clearReplicationMetadata(): Promise<void>;
-    protected abstract getTriggerName(tableName: string): string;
-    protected abstract getTriggerSQL(tableOptions: TableOptions, callback: (triggerName: string, sql: string) => void): void;
-    protected abstract triggerExists(triggerName: string): boolean;
+    protected abstract getTriggerNames(tableName: string): string[];
+    protected abstract getTriggerSQL(tableOptions: TableOptions, callback: (triggerName: string, sql: string) => boolean): void;
+    abstract triggerExists(triggerName: string): boolean;
+    abstract dropTriggers(tableName: string): void;
     createTriggers(tableOptions: TableOptions): void;
-    dropTriggers(tableName: string): void;
     getTransactionsToReplicate(destNode: string): Promise<number[]>;
     getRowsToReplicate(destNode: string, transaction_number: number, minCode?: number): Promise<ReplicationBlock>;
     protected abstract getFieldType(sqlType: number): DB.DataType;

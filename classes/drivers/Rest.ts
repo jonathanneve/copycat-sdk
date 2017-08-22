@@ -13,6 +13,7 @@ interface ITransactionList {
 } 
 
 export class RestClient extends Driver {
+    
     private httpClient: http.HttpClient;
     private restClient: rest.RestClient;
 
@@ -43,30 +44,18 @@ export class RestClient extends Driver {
             + '/cloud/nodes/' + origNode + '/transactions/' + block.transactionID.toString() + '/blocks/' + block.maxCode.toString(), block);
     }
 
-    private async doPost<T>(url: string, data: string): Promise<T>{
-        let res = await this.httpClient.post(url, data);                      
-        return new Promise<T>((resolve, reject) => {
-            if (res.message.statusCode != 200)
-                reject('HTTP error (' + res.message.statusCode.toString() + '): ' + res.message.statusMessage);
-            else {
-                let message = res.readBody()
-                .then((value: string) => {
-                    let json = JSON.parse(value);
-                    if (json.message == "OK") {
-                        if (json.result)
-                            resolve(<T>json.result);
-                        else
-                            resolve();
-                    }
-                    else
-                        reject('API call returned error: ' + json.message);
-                })
-                .catch((reason) => {
-                    reject('Error reading HTTP response: ' + reason);
-                })                
-            }
-        });
+    async listTables(fullFieldDefs: boolean): Promise<DB.TableDefinition[]> {
+        return await this.doGet<DB.TableDefinition[]>(this.baseURL + '/api/v1/users/' + this.userName + '/configs/' + this.configName + '/tables');
     }
+
+    async createTable(table: DB.TableDefinition): Promise<void> {
+        await this.doPost<DB.TableDefinition>(this.baseURL + '/api/v1/users/' + this.userName + '/configs/' + this.configName + '/tables', table);
+    }
+    
+    async updateTable(table: DB.TableDefinition): Promise<void> {
+        await this.doPut<DB.TableDefinition>(this.baseURL + '/api/v1/users/' + this.userName + '/configs/' + this.configName + '/tables', table);
+    }
+  
      private async doGet<T>(url: string): Promise<T>{
         let res = await this.restClient.get<T>(url);                      
         return new Promise<T>((resolve, reject) => {
@@ -78,6 +67,15 @@ export class RestClient extends Driver {
     }
     private async doPut<T>(url: string, obj: T): Promise<T>{
         let res = await this.restClient.replace<T>(url, obj);                      
+        return new Promise<T>((resolve, reject) => {
+            if (res.statusCode != 200)
+                reject('HTTP error ' + res.statusCode.toString());
+            else 
+                resolve(res.result);            
+        });
+    }
+    private async doPost<T>(url: string, obj: T): Promise<T>{
+        let res = await this.restClient.create<T>(url, obj);                      
         return new Promise<T>((resolve, reject) => {
             if (res.statusCode != 200)
                 reject('HTTP error ' + res.statusCode.toString());

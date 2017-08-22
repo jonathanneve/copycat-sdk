@@ -56,7 +56,7 @@ export abstract class SQLDriver extends Driver {
                 return "?";
             });
         }
-        return sql;
+        return sql; 
     }
     protected query(sql: string, namedParams?: DB.Field[], unnamedParams?: Object[], callback?: (record: DB.Record) => boolean | void): boolean{
         let params = [];
@@ -77,9 +77,10 @@ export abstract class SQLDriver extends Driver {
     }
 
     //Meta-data queries
-    protected abstract createTable(tableDef: DB.TableDefinition): void;
     protected abstract dropTable(tableName: string): void;
-    protected abstract tableExists(tableName: string): boolean;
+    protected abstract tableExists(tableName: string): boolean;    
+//    abstract createTable(table: DB.TableDefinition): Promise<void>;
+//    abstract updateTable(table: DB.TableDefinition): Promise<void>;
     
     //Replication meta-data
     protected abstract customMetadataExists(objectName: string, objectType: string): boolean;
@@ -112,19 +113,19 @@ export abstract class SQLDriver extends Driver {
     }
 
     //Trigger management
-    protected abstract getTriggerName(tableName: string): string;
-    protected abstract getTriggerSQL(tableOptions: TableOptions, callback: (triggerName: string, sql: string) => void): void;
-    protected abstract triggerExists(triggerName: string): boolean;
+    protected abstract getTriggerNames(tableName: string): string[];
+    protected abstract getTriggerSQL(tableOptions: TableOptions, callback: (triggerName: string, sql: string) => boolean): void;
+    public abstract triggerExists(triggerName: string): boolean;
+    public abstract dropTriggers(tableName: string): void;
 
     createTriggers(tableOptions: TableOptions): void {
-        this.getTriggerSQL(tableOptions, (triggerName, sql) => {
+        this.getTriggerSQL(tableOptions, (triggerName, sql): boolean => {
             if (!this.triggerExists(triggerName))
                 this.exec(sql);
-        });
+            return true;
+        });        
     }
-    dropTriggers(tableName: string): void {
-        throw new Error('Method not implemented.')
-    }
+    
 
     //REPLICATION FEATURES
     

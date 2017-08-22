@@ -38,7 +38,7 @@ const enum FirebirdAPIDataTypes {
 }
 
 export class FirebirdDriver extends SQLDriver {
-    
+     
     protected fbConnection: any;
     private tableDefs : { [tableName: string]: DB.DataType[] } = {};
     
@@ -278,18 +278,20 @@ export class FirebirdDriver extends SQLDriver {
         return this.query("select rdb$trigger_name from rdb$triggers where rdb$trigger_name = ?", null, [triggerName])
     }
 
-    getTriggerName(tableName: string): string {
-        //Implement truncating tablename correctly (with the RPL$ and config_name prefixes)
-        return tableName.substring(0, 25);
+    private getTriggerName(tableName: string, counter: number, trigger_number: number): string {        
+        let counterStr = (10000 + counter).toString().substring(1);
+        return 'CC$' + tableName.substring(0, 22) + counterStr + "_" + trigger_number;
     }
 
     getDBVersion():number{
         return parseInt(this.databaseVersion.substring(2));
     }
 
-    getTriggerSQL(tableOptions: TableOptions, callback: (triggerName: string, sql: string) => void): void {
+    getTriggerSQL(tableOptions: TableOptions, callback: (triggerName: string, sql: string) => boolean): void {
+        let trigger_number = 1;       
+        let counter = this.getMaxTableCounter() + 1;    
         this.dbDefinition.triggerTemplates.forEach(trig => {
-            let trigName : string = this.getTriggerName(tableOptions.tableName);
+            let trigName : string = this.getTriggerName(tableOptions.tableName, counter, trigger_number);
             trig = trig.replace(/%TABLE_NAME%/g, tableOptions.tableName);
             trig = trig.replace(/%TRIGGER_NAME%/g, trigName);
             trig = trig.replace(/%CONFIG_NAME%/g, this.configName);
@@ -310,15 +312,29 @@ export class FirebirdDriver extends SQLDriver {
                 trig = trig.replace(/%EXEC_STMT_PARAM%/g, "");
                 trig = trig.replace(/%DBKEY%/g, "rdb$db_key=''' || :dbkey || '''");
             }
-            callback(trigName, trig);
-        });        
+            if (!callback(trigName, trig)) {
+                this.dropTriggers(tableOptions.tableName);
+                break;
+            }
+        }); 
+            this.exec('insert into CC$TABLES (table_name, counter, included_fields, excluded_fields) values (?, ?, ?, ?)', null,
+                [tableOptions.tableName, counter, tableOptions.includedFields.join(', '), tableOptions.excludedFields.join(', ')]);
     }
-    dropTriggers(tableName: string) {
-        let trigName = this.getTriggerName(tableName);
-        if (this.triggerExists(trigName))
-          this.exec('DROP TRIGGER ' + trigName);
-        if (this.triggerExists(trigName + '2'))
-          this.exec('DROP TRIGGER ' + trigName + '2');
+
+    protected getTriggerNames(tableName: string): string[] {
+        let triggers: string[] = [];
+        this.query('select counter from cc$tables where table_name = ?', null, [tableName], (row: DB.Record) => {
+            triggers.push(this.getTriggerName(tableName, row.fieldByName('counter').value, 1));
+            triggers.push(this.getTriggerName(tableName, row.fieldByName('counter').value, 2));
+        });
+    }
+        
+    dropTriggers(tableName: string): void {
+        let triggers = this.getTriggerNames(tableName);
+        for (let trigger of triggers) {
+            this.exec('drop trigger ' + trigger);
+        }
+        this.exec('delete from cc$tables where table_name = ?', null, [tableName]);        
     }
 
     private getFieldDef(field: DB.FieldDefinition) : string{
@@ -343,7 +359,7 @@ export class FirebirdDriver extends SQLDriver {
         return field.fieldName + " " + fieldType + (field.notNull? " not null": "");
     }
 
-    createTable(tableDef: DB.TableDefinition){
+    async createTable(tableDef: DB.TableDefinition): Promise<void>{
         let fieldDefs: string[] = [];
         tableDef.fieldDefs.forEach((field) => {
             let fieldDef = this.getFieldDef(field);
@@ -354,6 +370,25 @@ export class FirebirdDriver extends SQLDriver {
             + ((tableDef.primaryKeys.length > 0)? ", primary key (" + tableDef.primaryKeys.join(', ') + ")": "")
             + ")";
         console.log('creating table: ' + tableDefSQL);
+        this.exec(tableDefSQL);
+        this.commit();
+    }
+
+    async updateTable(tableDef: DB.TableDefinition): Promise<void> {        
+        //TODO: handle primary key changes by dropping old PK and creating a new one
+        let existingTable = this.getTableDef(tableDef.tableName, false);
+        let fieldDefs: string[] = []; 
+        tableDef.fieldDefs.forEach((field) => {
+            if (!existingTable.fieldDefs.find((f) => (f.fieldName == field.fieldName))) {
+                let fieldDef = this.getFieldDef(field);
+                fieldDefs.push('ADD ' + fieldDef);
+            }    
+        });
+        let tableDefSQL = 'ALTER TABLE ' + tableDef.tableName + ' ( ' 
+            + fieldDefs.join(', ') 
+           // + ((tableDef.primaryKeys.length > 0)? ", primary key (" + tableDef.primaryKeys.join(', ') + ")": "")
+            + ")";
+        console.log('altering table: ' + tableDefSQL);
         this.exec(tableDefSQL);
         this.commit();
     }
@@ -381,6 +416,55 @@ export class FirebirdDriver extends SQLDriver {
     setReplicatingNode(origNode: string): void {
         this.exec("select rdb$set_context('USER_SESSION', 'REPLICATING_NODE', 'TRUE') from rdb$database");
     }
+
+    private listPrimaryKeyFields(tableName: string): string[]{
+        let keys: string[] = [];
+        this.query(
+            'select i.rdb$field_name as pk_name ' +
+            'from rdb$relation_constraints rel '+
+            'join rdb$index_segments i on rel.rdb$index_name = i.rdb$index_name '+
+            'where rel.rdb$constraint_type = "PRIMARY KEY" ' +
+            'and rel.rdb$relation_name = ? '+
+            'order by i.rdb$field_position', null, [tableName], (record: DB.Record) => {
+                keys.push(<string>record.fieldByName('pk_name').value);
+            })
+        return keys;
+    }
+
+    private getTableDef(tableName: string, fullFieldDefs: boolean) : DB.TableDefinition {
+        let tableDef = new DB.TableDefinition();
+        tableDef.tableName = tableName;
+        this.query('select rf.rdb$field_name, rfs.rdb$field_type, coalesce(rfs.rdb$character_length, rfs.rdb$field_length) as field_length, ' +
+            'rf.rdb$null_flag, rfs.rdb$field_sub_type, rfs.rdb$field_scale, rfs.precision '+    
+            'from rdb$relation_fields rf ' +
+            'join rdb$fields f on f.rdb$field_name = rf.rdb$field_source '+
+            'where rf.rdb$relation_name = ?', 
+            null, [tableDef.tableName], (fieldRec: DB.Record) => {
+                let fieldDef = new DB.FieldDefinition();
+                fieldDef.fieldName = <string>fieldRec.fieldByName('rdb$field_name').value;
+                if (fullFieldDefs) {
+                    fieldDef.dataType = this.convertDataType(<number>fieldRec.fieldByName('rdb$field_type').value, <number>fieldRec.fieldByName('rdb$field_sub_type').value);
+                    fieldDef.notNull = (fieldRec.fieldByName('rdb$null_flag').value == 1);
+                    fieldDef.precision = <number>fieldRec.fieldByName('rdb$precision').value;
+                    fieldDef.scale = <number>fieldRec.fieldByName('rdb$scale').value;
+                    fieldDef.length = <number>fieldRec.fieldByName('field_length').value;
+                    fieldDef.autoInc = false;
+                }
+                tableDef.fieldDefs.push(fieldDef);                
+            });
+        if (fullFieldDefs)
+            tableDef.primaryKeys = this.listPrimaryKeyFields(tableDef.tableName);
+        return tableDef;
+    }
+    
+    async listTables(fullFieldDefs: boolean): Promise<DB.TableDefinition[]>{
+        let tableDefs: DB.TableDefinition[] = [];
+        this.query('select rdb$relation_name from rdb$relations', [], [], (tableRec: DB.Record) => {
+            let tableDef = this.getTableDef(<string>tableRec.fieldByName('rdb$relation_name').value, fullFieldDefs);
+            tableDefs.push(tableDef);
+        });
+        return tableDefs;
+    } 
 }
 
 addDriver('FirebirdDriver', FirebirdDriver);

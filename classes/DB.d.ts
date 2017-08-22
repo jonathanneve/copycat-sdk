@@ -35,6 +35,7 @@ export declare class FieldDefinition {
     dataTypeStr?: string;
     length?: number;
     precision?: number;
+    scale?: number;
     notNull?: boolean;
     autoInc?: boolean;
 }

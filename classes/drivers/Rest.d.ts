@@ -1,5 +1,6 @@
 import { Driver, ReplicationBlock } from "../Driver";
 import { Node } from "../../interfaces/Nodes";
+import * as DB from "../DB";
 export declare class RestClient extends Driver {
     userName: string;
     configName: string;
@@ -13,9 +14,12 @@ export declare class RestClient extends Driver {
     getRowsToReplicate(destNode: string, transaction_number: number, minCode: number): Promise<ReplicationBlock>;
     validateBlock(transactionNumber: number, maxCode: number, destNode: string): Promise<void>;
     replicateBlock(origNode: string, block: ReplicationBlock): Promise<void>;
-    private doPost<T>(url, data);
+    listTables(fullFieldDefs: boolean): Promise<DB.TableDefinition[]>;
+    createTable(table: DB.TableDefinition): Promise<void>;
+    updateTable(table: DB.TableDefinition): Promise<void>;
     private doGet<T>(url);
     private doPut<T>(url, obj);
+    private doPost<T>(url, obj);
     private doDelete<T>(url);
     initReplicationMetadata(): Promise<void>;
     clearReplicationMetadata(): Promise<void>;

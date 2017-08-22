@@ -52,30 +52,19 @@ class RestClient extends Driver_1.Driver {
                 + '/cloud/nodes/' + origNode + '/transactions/' + block.transactionID.toString() + '/blocks/' + block.maxCode.toString(), block);
         });
     }
-    doPost(url, data) {
+    listTables(fullFieldDefs) {
         return __awaiter(this, void 0, void 0, function* () {
-            let res = yield this.httpClient.post(url, data);
-            return new Promise((resolve, reject) => {
-                if (res.message.statusCode != 200)
-                    reject('HTTP error (' + res.message.statusCode.toString() + '): ' + res.message.statusMessage);
-                else {
-                    let message = res.readBody()
-                        .then((value) => {
-                        let json = JSON.parse(value);
-                        if (json.message == "OK") {
-                            if (json.result)
-                                resolve(json.result);
-                            else
-                                resolve();
-                        }
-                        else
-                            reject('API call returned error: ' + json.message);
-                    })
-                        .catch((reason) => {
-                        reject('Error reading HTTP response: ' + reason);
-                    });
-                }
-            });
+            return yield this.doGet(this.baseURL + '/api/v1/users/' + this.userName + '/configs/' + this.configName + '/tables');
+        });
+    }
+    createTable(table) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.doPost(this.baseURL + '/api/v1/users/' + this.userName + '/configs/' + this.configName + '/tables', table);
+        });
+    }
+    updateTable(table) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.doPut(this.baseURL + '/api/v1/users/' + this.userName + '/configs/' + this.configName + '/tables', table);
         });
     }
     doGet(url) {
@@ -92,6 +81,17 @@ class RestClient extends Driver_1.Driver {
     doPut(url, obj) {
         return __awaiter(this, void 0, void 0, function* () {
             let res = yield this.restClient.replace(url, obj);
+            return new Promise((resolve, reject) => {
+                if (res.statusCode != 200)
+                    reject('HTTP error ' + res.statusCode.toString());
+                else
+                    resolve(res.result);
+            });
+        });
+    }
+    doPost(url, obj) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let res = yield this.restClient.create(url, obj);
             return new Promise((resolve, reject) => {
                 if (res.statusCode != 200)
                     reject('HTTP error ' + res.statusCode.toString());

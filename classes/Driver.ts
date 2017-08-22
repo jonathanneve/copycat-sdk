@@ -48,6 +48,10 @@ export abstract class Driver implements IDriver {
     abstract initReplicationMetadata(): Promise<void>;
     abstract clearReplicationMetadata(): Promise<void>;
 
+    abstract listTables(fullFieldDefs: boolean): Promise<DB.TableDefinition[]>;
+    abstract createTable(table: DB.TableDefinition): Promise<void>;
+    abstract updateTable(table: DB.TableDefinition): Promise<void>;
+
     /*customMetadataExists(objectName: string, objectType: string): boolean;
     createCustomMetadata(metadata: DB.CustomMetadataDefinition): void;*/
 }

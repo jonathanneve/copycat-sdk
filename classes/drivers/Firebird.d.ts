@@ -30,13 +30,18 @@ export declare class FirebirdDriver extends SQLDriver {
     dropTable(tableName: string): void;
     tableExists(tableName: string): boolean;
     triggerExists(triggerName: string): boolean;
-    getTriggerName(tableName: string): string;
+    private getTriggerName(tableName, counter, trigger_number);
     getDBVersion(): number;
-    getTriggerSQL(tableOptions: TableOptions, callback: (triggerName: string, sql: string) => void): void;
+    getTriggerSQL(tableOptions: TableOptions, callback: (triggerName: string, sql: string) => boolean): void;
+    protected getTriggerNames(tableName: string): string[];
     dropTriggers(tableName: string): void;
     private getFieldDef(field);
-    createTable(tableDef: DB.TableDefinition): void;
+    createTable(tableDef: DB.TableDefinition): Promise<void>;
+    updateTable(tableDef: DB.TableDefinition): Promise<void>;
     customMetadataExists(objectName: string, objectType: string): boolean;
     createCustomMetadata(metadata: DB.CustomMetadataDefinition): void;
     setReplicatingNode(origNode: string): void;
+    private listPrimaryKeyFields(tableName);
+    private getTableDef(tableName, fullFieldDefs);
+    listTables(fullFieldDefs: boolean): Promise<DB.TableDefinition[]>;
 }
