@@ -16,48 +16,47 @@ export class RestClient extends Driver {
     
     private httpClient: http.HttpClient;
     private restClient: rest.RestClient;
+    private requestOptions: rest.IRequestOptions;
 
-    constructor(public userName: string, public configName: string, public accessToken: string, public baseURL: string) {
+    constructor(public accessToken: string, public baseURL: string) {
         super();        
         this.httpClient = new http.HttpClient('');
         this.restClient = new rest.RestClient('');
+
+        requestOptions.additionalHeaders['Authorization'] = 'JWT ' + this.accessToken;
+        requestOptions.additionalHeaders['Content-Type'] = 'application/json';    
     }
-    async getNode(nodeConfigName: string): Promise<Node> {
-        return await this.doGet<Node>(this.baseURL + '/api/v1/users/' + this.userName + '/configs/' + this.configName 
-            + '/node_configs/' + nodeConfigName);
+
+    async getNodeInfo(): Promise<Node> {
+        return await this.doGet<Node>(this.baseURL + '/api/v1/node/');
     }
 
     async getTransactionsToReplicate(destNode: string): Promise<number[]> {        
-        return await this.doGet<number[]>(this.baseURL + '/api/v1/users/' + this.userName + '/configs/' + this.configName 
-            + '/cloud/nodes/' + destNode + '/transactions/');
+        return await this.doGet<number[]>(this.baseURL + '/api/v1/node/transactions/');
     }
     async getRowsToReplicate(destNode: string, transaction_number: number, minCode: number): Promise<ReplicationBlock> {
-        return await this.doGet<ReplicationBlock>(this.baseURL + '/api/v1/users/' + this.userName + '/configs/' + this.configName
-            + '/cloud/nodes/' + destNode + '/transactions/' + transaction_number.toString() + '/blocks/' + minCode.toString());
+        return await this.doGet<ReplicationBlock>(this.baseURL + '/api/v1/node/transaction/'
+            + transaction_number.toString() + '/blocks/' + minCode.toString());
     }
     async validateBlock(transactionNumber: number, maxCode: number, destNode: string): Promise<void> {
-        await this.doDelete<void>(this.baseURL + '/api/v1/users/' + this.userName + '/configs/' + this.configName
-            + '/cloud/nodes/' + destNode + '/transactions/' + transactionNumber.toString() + '/blocks/' + maxCode.toString());
+        await this.doDelete<void>(this.baseURL + '/api/v1/node/transaction/'
+            + transactionNumber.toString() + '/blocks/' + maxCode.toString());
     }
     async replicateBlock(origNode: string, block: ReplicationBlock): Promise<void> {
-        await this.doPut<ReplicationBlock>(this.baseURL + '/api/v1/users/' + this.userName + '/configs/' + this.configName 
-            + '/cloud/nodes/' + origNode + '/transactions/' + block.transactionID.toString() + '/blocks/' + block.maxCode.toString(), block);
+        await this.doPut<ReplicationBlock>(this.baseURL + '/api/v1/node/transaction/'
+        + transactionNumber.toString() + '/blocks/' + maxCode.toString(), block);
     }
 
     async listTables(fullFieldDefs: boolean): Promise<DB.TableDefinition[]> {
-        return await this.doGet<DB.TableDefinition[]>(this.baseURL + '/api/v1/users/' + this.userName + '/configs/' + this.configName + '/tables');
+        return await this.doGet<DB.TableDefinition[]>(this.baseURL + '/api/v1/node/tables');
     }
 
-    async createTable(table: DB.TableDefinition): Promise<void> {
-        await this.doPost<DB.TableDefinition>(this.baseURL + '/api/v1/users/' + this.userName + '/configs/' + this.configName + '/tables', table);
+    async putTable(table: DB.TableDefinition): Promise<void> {
+        await this.doPut<DB.TableDefinition>(this.baseURL + '/api/v1/node/table/' + table.tableName, table);
     }
-    
-    async updateTable(table: DB.TableDefinition): Promise<void> {
-        await this.doPut<DB.TableDefinition>(this.baseURL + '/api/v1/users/' + this.userName + '/configs/' + this.configName + '/tables', table);
-    }
-  
-     private async doGet<T>(url: string): Promise<T>{
-        let res = await this.restClient.get<T>(url);                      
+        
+    private async doGet<T>(url: string): Promise<T>{        
+        let res = await this.restClient.get<T>(url, this.requestOptions);                      
         return new Promise<T>((resolve, reject) => {
             if (res.statusCode != 200)
                 reject('HTTP error ' + res.statusCode.toString());
@@ -66,7 +65,7 @@ export class RestClient extends Driver {
         });
     }
     private async doPut<T>(url: string, obj: T): Promise<T>{
-        let res = await this.restClient.replace<T>(url, obj);                      
+        let res = await this.restClient.replace<T>(url, obj, this.requestOptions);                      
         return new Promise<T>((resolve, reject) => {
             if (res.statusCode != 200)
                 reject('HTTP error ' + res.statusCode.toString());
@@ -75,7 +74,7 @@ export class RestClient extends Driver {
         });
     }
     private async doPost<T>(url: string, obj: T): Promise<T>{
-        let res = await this.restClient.create<T>(url, obj);                      
+        let res = await this.restClient.create<T>(url, obj, this.requestOptions);                      
         return new Promise<T>((resolve, reject) => {
             if (res.statusCode != 200)
                 reject('HTTP error ' + res.statusCode.toString());
@@ -85,7 +84,7 @@ export class RestClient extends Driver {
     }
 
     private async doDelete<T>(url: string): Promise<T>{
-        let res = await this.restClient.del<T>(url);                      
+        let res = await this.restClient.del<T>(url, this.requestOptions);                      
         return new Promise<T>((resolve, reject) => {
             if (res.statusCode != 200)
                 reject('HTTP error ' + res.statusCode.toString());

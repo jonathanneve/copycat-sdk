@@ -30,6 +30,7 @@ export declare class FirebirdDriver extends SQLDriver {
     dropTable(tableName: string): void;
     tableExists(tableName: string): boolean;
     triggerExists(triggerName: string): boolean;
+    private getMaxTableCounter();
     private getTriggerName(tableName, counter, trigger_number);
     getDBVersion(): number;
     getTriggerSQL(tableOptions: TableOptions, callback: (triggerName: string, sql: string) => boolean): void;

@@ -14,12 +14,12 @@ export class Replicator {
 
     constructor (localConf: ClientConfiguration){
         this.localConfig = localConf;
-        this.cloudConnection = new RestClient(this.localConfig.username, this.localConfig.configName, this.localConfig.accessToken, this.localConfig.cloudURL);        
+        this.cloudConnection = new RestClient(this.localConfig.accessToken, this.localConfig.cloudURL);        
     }
 
     async refreshConfig(){
         //Fetch node configuration from cloud and store it in config object
-        this.node = await this.cloudConnection.getNode(this.localConfig.localNode.accessToken);
+        this.node = await this.cloudConnection.getNodeInfo();
         //this.cloudNodeConfig = await this.cloudConnection.getNodeConfig('CLOUD');
     }
 

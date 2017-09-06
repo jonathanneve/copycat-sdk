@@ -5,7 +5,7 @@
     "sourceMap": true,
     "declaration": true,
     "moduleResolution": "node",
-    "sourceRoot": "src",
+    "sourceRoot": ".",
     "lib": [
             "es5",
             "es6",
@@ -16,7 +16,8 @@
   },
   "include": [
     "classes/**/*.ts",
-    "interfaces/**/*.ts"
+    "interfaces/**/*.ts",
+    "test/**/*.ts"
   ],
   "exclude": [
      "node_modules"

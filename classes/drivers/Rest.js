@@ -13,63 +13,56 @@ const http = require("typed-rest-client/HttpClient");
 const rest = require("typed-rest-client/RestClient");
 console.log('rest');
 class RestClient extends Driver_1.Driver {
-    constructor(userName, configName, accessToken, baseURL) {
+    constructor(accessToken, baseURL) {
         super();
-        this.userName = userName;
-        this.configName = configName;
         this.accessToken = accessToken;
         this.baseURL = baseURL;
         this.httpClient = new http.HttpClient('');
         this.restClient = new rest.RestClient('');
+        requestOptions.additionalHeaders['Authorization'] = 'JWT ' + this.accessToken;
+        requestOptions.additionalHeaders['Content-Type'] = 'application/json';
     }
-    getNode(nodeConfigName) {
+    getNodeInfo() {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.doGet(this.baseURL + '/api/v1/users/' + this.userName + '/configs/' + this.configName
-                + '/node_configs/' + nodeConfigName);
+            return yield this.doGet(this.baseURL + '/api/v1/node/');
         });
     }
     getTransactionsToReplicate(destNode) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.doGet(this.baseURL + '/api/v1/users/' + this.userName + '/configs/' + this.configName
-                + '/cloud/nodes/' + destNode + '/transactions/');
+            return yield this.doGet(this.baseURL + '/api/v1/node/transactions/');
         });
     }
     getRowsToReplicate(destNode, transaction_number, minCode) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.doGet(this.baseURL + '/api/v1/users/' + this.userName + '/configs/' + this.configName
-                + '/cloud/nodes/' + destNode + '/transactions/' + transaction_number.toString() + '/blocks/' + minCode.toString());
+            return yield this.doGet(this.baseURL + '/api/v1/node/transaction/'
+                + transaction_number.toString() + '/blocks/' + minCode.toString());
         });
     }
     validateBlock(transactionNumber, maxCode, destNode) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.doDelete(this.baseURL + '/api/v1/users/' + this.userName + '/configs/' + this.configName
-                + '/cloud/nodes/' + destNode + '/transactions/' + transactionNumber.toString() + '/blocks/' + maxCode.toString());
+            yield this.doDelete(this.baseURL + '/api/v1/node/transaction/'
+                + transactionNumber.toString() + '/blocks/' + maxCode.toString());
         });
     }
     replicateBlock(origNode, block) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.doPut(this.baseURL + '/api/v1/users/' + this.userName + '/configs/' + this.configName
-                + '/cloud/nodes/' + origNode + '/transactions/' + block.transactionID.toString() + '/blocks/' + block.maxCode.toString(), block);
+            yield this.doPut(this.baseURL + '/api/v1/node/transaction/'
+                + transactionNumber.toString() + '/blocks/' + maxCode.toString(), block);
         });
     }
     listTables(fullFieldDefs) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield this.doGet(this.baseURL + '/api/v1/users/' + this.userName + '/configs/' + this.configName + '/tables');
+            return yield this.doGet(this.baseURL + '/api/v1/node/tables');
         });
     }
-    createTable(table) {
+    putTable(table) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.doPost(this.baseURL + '/api/v1/users/' + this.userName + '/configs/' + this.configName + '/tables', table);
-        });
-    }
-    updateTable(table) {
-        return __awaiter(this, void 0, void 0, function* () {
-            yield this.doPut(this.baseURL + '/api/v1/users/' + this.userName + '/configs/' + this.configName + '/tables', table);
+            yield this.doPut(this.baseURL + '/api/v1/node/table/' + table.tableName, table);
         });
     }
     doGet(url) {
         return __awaiter(this, void 0, void 0, function* () {
-            let res = yield this.restClient.get(url);
+            let res = yield this.restClient.get(url, this.requestOptions);
             return new Promise((resolve, reject) => {
                 if (res.statusCode != 200)
                     reject('HTTP error ' + res.statusCode.toString());
@@ -80,7 +73,7 @@ class RestClient extends Driver_1.Driver {
     }
     doPut(url, obj) {
         return __awaiter(this, void 0, void 0, function* () {
-            let res = yield this.restClient.replace(url, obj);
+            let res = yield this.restClient.replace(url, obj, this.requestOptions);
             return new Promise((resolve, reject) => {
                 if (res.statusCode != 200)
                     reject('HTTP error ' + res.statusCode.toString());
@@ -91,7 +84,7 @@ class RestClient extends Driver_1.Driver {
     }
     doPost(url, obj) {
         return __awaiter(this, void 0, void 0, function* () {
-            let res = yield this.restClient.create(url, obj);
+            let res = yield this.restClient.create(url, obj, this.requestOptions);
             return new Promise((resolve, reject) => {
                 if (res.statusCode != 200)
                     reject('HTTP error ' + res.statusCode.toString());
@@ -102,7 +95,7 @@ class RestClient extends Driver_1.Driver {
     }
     doDelete(url) {
         return __awaiter(this, void 0, void 0, function* () {
-            let res = yield this.restClient.del(url);
+            let res = yield this.restClient.del(url, this.requestOptions);
             return new Promise((resolve, reject) => {
                 if (res.statusCode != 200)
                     reject('HTTP error ' + res.statusCode.toString());

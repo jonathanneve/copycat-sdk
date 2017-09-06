@@ -12,12 +12,12 @@ const Rest_1 = require("./Drivers/Rest");
 class Replicator {
     constructor(localConf) {
         this.localConfig = localConf;
-        this.cloudConnection = new Rest_1.RestClient(this.localConfig.username, this.localConfig.configName, this.localConfig.accessToken, this.localConfig.cloudURL);
+        this.cloudConnection = new Rest_1.RestClient(this.localConfig.accessToken, this.localConfig.cloudURL);
     }
     refreshConfig() {
         return __awaiter(this, void 0, void 0, function* () {
             //Fetch node configuration from cloud and store it in config object
-            this.node = yield this.cloudConnection.getNode(this.localConfig.localNode.accessToken);
+            this.node = yield this.cloudConnection.getNodeInfo();
             //this.cloudNodeConfig = await this.cloudConnection.getNodeConfig('CLOUD');
         });
     }

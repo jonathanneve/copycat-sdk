@@ -278,6 +278,14 @@ export class FirebirdDriver extends SQLDriver {
         return this.query("select rdb$trigger_name from rdb$triggers where rdb$trigger_name = ?", null, [triggerName])
     }
 
+    private getMaxTableCounter(): number {
+        let maxCounter = 0;
+        this.query("select max(counter) as max_counter from cc$tables", null, null, (rec) => {
+            maxCounter = <number>rec.fieldByName('max_counter').value;
+        });
+        return maxCounter;
+    }
+
     private getTriggerName(tableName: string, counter: number, trigger_number: number): string {        
         let counterStr = (10000 + counter).toString().substring(1);
         return 'CC$' + tableName.substring(0, 22) + counterStr + "_" + trigger_number;
@@ -290,7 +298,7 @@ export class FirebirdDriver extends SQLDriver {
     getTriggerSQL(tableOptions: TableOptions, callback: (triggerName: string, sql: string) => boolean): void {
         let trigger_number = 1;       
         let counter = this.getMaxTableCounter() + 1;    
-        this.dbDefinition.triggerTemplates.forEach(trig => {
+        for(let trig in this.dbDefinition.triggerTemplates) {
             let trigName : string = this.getTriggerName(tableOptions.tableName, counter, trigger_number);
             trig = trig.replace(/%TABLE_NAME%/g, tableOptions.tableName);
             trig = trig.replace(/%TRIGGER_NAME%/g, trigName);
@@ -301,7 +309,7 @@ export class FirebirdDriver extends SQLDriver {
               trig = trig.replace(/%INCLUDED_FIELDS%/, "0=0");
             if (tableOptions.excludedFields.length > 0)
               trig = trig.replace(/%EXCLUDED_FIELDS%/, "(rf.rdb$field_name in (" + tableOptions.excludedFields.join(', ') + "))");
-            else
+            else 
               trig = trig.replace(/%EXCLUDED_FIELDS%/, "0=0");
 
             if (this.getDBVersion() >= 30) {
@@ -316,7 +324,7 @@ export class FirebirdDriver extends SQLDriver {
                 this.dropTriggers(tableOptions.tableName);
                 break;
             }
-        }); 
+        }; 
             this.exec('insert into CC$TABLES (table_name, counter, included_fields, excluded_fields) values (?, ?, ?, ?)', null,
                 [tableOptions.tableName, counter, tableOptions.includedFields.join(', '), tableOptions.excludedFields.join(', ')]);
     }
@@ -324,9 +332,10 @@ export class FirebirdDriver extends SQLDriver {
     protected getTriggerNames(tableName: string): string[] {
         let triggers: string[] = [];
         this.query('select counter from cc$tables where table_name = ?', null, [tableName], (row: DB.Record) => {
-            triggers.push(this.getTriggerName(tableName, row.fieldByName('counter').value, 1));
-            triggers.push(this.getTriggerName(tableName, row.fieldByName('counter').value, 2));
+            triggers.push(this.getTriggerName(tableName, <number>row.fieldByName('counter').value, 1));
+            triggers.push(this.getTriggerName(tableName, <number>row.fieldByName('counter').value, 2));
         });
+        return triggers;
     }
         
     dropTriggers(tableName: string): void {

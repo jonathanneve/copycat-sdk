@@ -234,6 +234,13 @@ class FirebirdDriver extends SQLDriver_1.SQLDriver {
     triggerExists(triggerName) {
         return this.query("select rdb$trigger_name from rdb$triggers where rdb$trigger_name = ?", null, [triggerName]);
     }
+    getMaxTableCounter() {
+        let maxCounter = 0;
+        this.query("select max(counter) as max_counter from cc$tables", null, null, (rec) => {
+            maxCounter = rec.fieldByName('max_counter').value;
+        });
+        return maxCounter;
+    }
     getTriggerName(tableName, counter, trigger_number) {
         let counterStr = (10000 + counter).toString().substring(1);
         return 'CC$' + tableName.substring(0, 22) + counterStr + "_" + trigger_number;
@@ -244,7 +251,7 @@ class FirebirdDriver extends SQLDriver_1.SQLDriver {
     getTriggerSQL(tableOptions, callback) {
         let trigger_number = 1;
         let counter = this.getMaxTableCounter() + 1;
-        this.dbDefinition.triggerTemplates.forEach(trig => {
+        for (let trig in this.dbDefinition.triggerTemplates) {
             let trigName = this.getTriggerName(tableOptions.tableName, counter, trigger_number);
             trig = trig.replace(/%TABLE_NAME%/g, tableOptions.tableName);
             trig = trig.replace(/%TRIGGER_NAME%/g, trigName);
@@ -269,7 +276,8 @@ class FirebirdDriver extends SQLDriver_1.SQLDriver {
                 this.dropTriggers(tableOptions.tableName);
                 break;
             }
-        });
+        }
+        ;
         this.exec('insert into CC$TABLES (table_name, counter, included_fields, excluded_fields) values (?, ?, ?, ?)', null, [tableOptions.tableName, counter, tableOptions.includedFields.join(', '), tableOptions.excludedFields.join(', ')]);
     }
     getTriggerNames(tableName) {
@@ -278,6 +286,7 @@ class FirebirdDriver extends SQLDriver_1.SQLDriver {
             triggers.push(this.getTriggerName(tableName, row.fieldByName('counter').value, 1));
             triggers.push(this.getTriggerName(tableName, row.fieldByName('counter').value, 2));
         });
+        return triggers;
     }
     dropTriggers(tableName) {
         let triggers = this.getTriggerNames(tableName);
