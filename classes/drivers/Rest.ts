@@ -13,20 +13,27 @@ interface ITransactionList {
 } 
 
 export class RestClient extends Driver {
-    
+
     private httpClient: http.HttpClient;
     private restClient: rest.RestClient;
     private requestOptions: rest.IRequestOptions;
 
     constructor(public accessToken: string, public baseURL: string) {
-        super();        
+        super();
         this.httpClient = new http.HttpClient('');
         this.restClient = new rest.RestClient('');
 
-        requestOptions.additionalHeaders['Authorization'] = 'JWT ' + this.accessToken;
-        requestOptions.additionalHeaders['Content-Type'] = 'application/json';    
+        this.requestOptions.additionalHeaders['Authorization'] = 'JWT ' + this.accessToken;
+        this.requestOptions.additionalHeaders['Content-Type'] = 'application/json';
     }
-
+        
+    async createTable(table: DB.TableDefinition): Promise<void> {
+        await this.doPut<DB.TableDefinition>(this.baseURL + '/api/v1/node/table/' + table.tableName, table);
+    }
+    async updateTable(table: DB.TableDefinition): Promise<void> {
+        await this.doPut<DB.TableDefinition>(this.baseURL + '/api/v1/node/table/' + table.tableName, table);
+    }
+    
     async getNodeInfo(): Promise<Node> {
         return await this.doGet<Node>(this.baseURL + '/api/v1/node/');
     }
@@ -38,22 +45,20 @@ export class RestClient extends Driver {
         return await this.doGet<ReplicationBlock>(this.baseURL + '/api/v1/node/transaction/'
             + transaction_number.toString() + '/blocks/' + minCode.toString());
     }
+    
     async validateBlock(transactionNumber: number, maxCode: number, destNode: string): Promise<void> {
         await this.doDelete<void>(this.baseURL + '/api/v1/node/transaction/'
             + transactionNumber.toString() + '/blocks/' + maxCode.toString());
     }
+
     async replicateBlock(origNode: string, block: ReplicationBlock): Promise<void> {
         await this.doPut<ReplicationBlock>(this.baseURL + '/api/v1/node/transaction/'
-        + transactionNumber.toString() + '/blocks/' + maxCode.toString(), block);
+        + block.transactionID.toString() + '/blocks/' +block.maxCode.toString(), block);
     }
 
     async listTables(fullFieldDefs: boolean): Promise<DB.TableDefinition[]> {
         return await this.doGet<DB.TableDefinition[]>(this.baseURL + '/api/v1/node/tables');
-    }
-
-    async putTable(table: DB.TableDefinition): Promise<void> {
-        await this.doPut<DB.TableDefinition>(this.baseURL + '/api/v1/node/table/' + table.tableName, table);
-    }
+    }    
         
     private async doGet<T>(url: string): Promise<T>{        
         let res = await this.restClient.get<T>(url, this.requestOptions);                      
