@@ -4,7 +4,7 @@ import {Node} from "../../interfaces/Nodes"
 import * as DB from "../DB"
 import * as http from 'typed-rest-client/HttpClient';
 import * as rest from 'typed-rest-client/RestClient';
-import { FirebirdDriver } from "./Firebird";
+//import { FirebirdDriver } from "./Firebird";
 
 console.log('rest');
 

@@ -1,9 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Driver_1 = require("../classes/Driver");
+class ConfigType {
+}
+exports.ConfigType = ConfigType;
 class Configuration {
     constructor() {
         this.recordVersionsToKeepInCloud = 0;
+        this.configType = new ConfigType();
     }
     static createFromJson(json) {
         if (json.cloudDatabase) {

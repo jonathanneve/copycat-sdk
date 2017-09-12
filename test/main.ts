@@ -2,7 +2,7 @@ import {Replicator} from '../classes/Replicator'
 import * as DB from '../classes/DB'
 //import {ConfigMgr, TableOptions, NodeOptions} from '../ConfigMgr'
 import {RestClient} from '../classes/drivers/Rest'
-import * as FB from '../classes/drivers/Firebird'
+//import * as FB from '../classes/drivers/Firebird'
 import {ClientConfiguration} from '../interfaces/ClientConfig'
 //import '../Drivers/Firebird.js'
 /*

@@ -9,8 +9,7 @@ export declare class ReplicationOptions {
     excludedTables?: string[];
 }
 export declare class Node {
-    username: string;
-    configName: string;
+    configID: number;
     nodeName: string;
     accessToken: string;
     syncToCloud: ReplicationOptions;

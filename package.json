@@ -1,6 +1,6 @@
 {
   "name": "@spirale-tech/copycat-sdk",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "description": "CopyCat public SDK",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -18,7 +18,6 @@
     "typescript": "^2.0.6"
   },
   "dependencies": {
-    "@spirale-tech/firebird-cc": "^0.2.0",
     "@types/node": "^8.0.12",
     "debug": "^2.2.0",
     "typed-rest-client": "^0.11.0"

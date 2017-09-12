@@ -11,6 +11,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Driver_1 = require("../Driver");
 const http = require("typed-rest-client/HttpClient");
 const rest = require("typed-rest-client/RestClient");
+//import { FirebirdDriver } from "./Firebird";
 console.log('rest');
 class RestClient extends Driver_1.Driver {
     constructor(accessToken, baseURL) {
@@ -19,8 +20,18 @@ class RestClient extends Driver_1.Driver {
         this.baseURL = baseURL;
         this.httpClient = new http.HttpClient('');
         this.restClient = new rest.RestClient('');
-        requestOptions.additionalHeaders['Authorization'] = 'JWT ' + this.accessToken;
-        requestOptions.additionalHeaders['Content-Type'] = 'application/json';
+        this.requestOptions.additionalHeaders['Authorization'] = 'JWT ' + this.accessToken;
+        this.requestOptions.additionalHeaders['Content-Type'] = 'application/json';
+    }
+    createTable(table) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.doPut(this.baseURL + '/api/v1/node/table/' + table.tableName, table);
+        });
+    }
+    updateTable(table) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.doPut(this.baseURL + '/api/v1/node/table/' + table.tableName, table);
+        });
     }
     getNodeInfo() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -47,17 +58,12 @@ class RestClient extends Driver_1.Driver {
     replicateBlock(origNode, block) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.doPut(this.baseURL + '/api/v1/node/transaction/'
-                + transactionNumber.toString() + '/blocks/' + maxCode.toString(), block);
+                + block.transactionID.toString() + '/blocks/' + block.maxCode.toString(), block);
         });
     }
     listTables(fullFieldDefs) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.doGet(this.baseURL + '/api/v1/node/tables');
-        });
-    }
-    putTable(table) {
-        return __awaiter(this, void 0, void 0, function* () {
-            yield this.doPut(this.baseURL + '/api/v1/node/table/' + table.tableName, table);
         });
     }
     doGet(url) {

@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Replicator_1 = require("../classes/Replicator");
+//import * as FB from '../classes/drivers/Firebird'
 const ClientConfig_1 = require("../interfaces/ClientConfig");
 //import '../Drivers/Firebird.js'
 /*
