@@ -29,7 +29,9 @@ export declare abstract class Driver implements IDriver {
     abstract initReplicationMetadata(): Promise<void>;
     abstract clearReplicationMetadata(): Promise<void>;
     abstract listTables(fullFieldDefs: boolean): Promise<DB.TableDefinition[]>;
-    abstract createTable(table: DB.TableDefinition): Promise<void>;
-    abstract updateTable(table: DB.TableDefinition): Promise<void>;
+    abstract createOrUpdateTable(table: DB.TableDefinition): Promise<void>;
 }
+export declare var drivers: {
+    [id: string]: typeof Driver;
+};
 export declare function addDriver(driverName: string, driverType: typeof Driver): void;

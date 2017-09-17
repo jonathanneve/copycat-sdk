@@ -7,5 +7,5 @@ export declare class ClientConfiguration {
     localNode?: Node;
     localDatabase: Driver;
     cloudURL?: string;
-    static createFromJson(json: any): ClientConfiguration;
+    static createFromJson(json: any, driver: Driver): ClientConfiguration;
 }

@@ -23,15 +23,21 @@ export class RestClient extends Driver {
         this.httpClient = new http.HttpClient('');
         this.restClient = new rest.RestClient('');
 
-        this.requestOptions.additionalHeaders['Authorization'] = 'JWT ' + this.accessToken;
-        this.requestOptions.additionalHeaders['Content-Type'] = 'application/json';
+        this.requestOptions = {
+            additionalHeaders: {
+                "Authorization": 'JWT ' + this.accessToken,
+                "Content-Type": 'application/json'}
+        }
     }
         
-    async createTable(table: DB.TableDefinition): Promise<void> {
+    async createOrUpdateTable(table: DB.TableDefinition): Promise<void> {
         await this.doPut<DB.TableDefinition>(this.baseURL + '/api/v1/node/table/' + table.tableName, table);
     }
+    async createTable(table: DB.TableDefinition): Promise<void> {
+        await this.createOrUpdateTable(table);
+    }
     async updateTable(table: DB.TableDefinition): Promise<void> {
-        await this.doPut<DB.TableDefinition>(this.baseURL + '/api/v1/node/table/' + table.tableName, table);
+        await this.createOrUpdateTable(table);
     }
     
     async getNodeInfo(): Promise<Node> {

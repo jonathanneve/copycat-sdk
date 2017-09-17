@@ -8,6 +8,7 @@ export declare class RestClient extends Driver {
     private restClient;
     private requestOptions;
     constructor(accessToken: string, baseURL: string);
+    createOrUpdateTable(table: DB.TableDefinition): Promise<void>;
     createTable(table: DB.TableDefinition): Promise<void>;
     updateTable(table: DB.TableDefinition): Promise<void>;
     getNodeInfo(): Promise<Node>;

@@ -20,17 +20,26 @@ class RestClient extends Driver_1.Driver {
         this.baseURL = baseURL;
         this.httpClient = new http.HttpClient('');
         this.restClient = new rest.RestClient('');
-        this.requestOptions.additionalHeaders['Authorization'] = 'JWT ' + this.accessToken;
-        this.requestOptions.additionalHeaders['Content-Type'] = 'application/json';
+        this.requestOptions = {
+            additionalHeaders: {
+                "Authorization": 'JWT ' + this.accessToken,
+                "Content-Type": 'application/json'
+            }
+        };
     }
-    createTable(table) {
+    createOrUpdateTable(table) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.doPut(this.baseURL + '/api/v1/node/table/' + table.tableName, table);
         });
     }
+    createTable(table) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.createOrUpdateTable(table);
+        });
+    }
     updateTable(table) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.doPut(this.baseURL + '/api/v1/node/table/' + table.tableName, table);
+            yield this.createOrUpdateTable(table);
         });
     }
     getNodeInfo() {

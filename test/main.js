@@ -1,8 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Replicator_1 = require("../classes/Replicator");
-//import * as FB from '../classes/drivers/Firebird'
+const FB = require("./Firebird");
 const ClientConfig_1 = require("../interfaces/ClientConfig");
+const fs = require("fs");
+let jsonConf = JSON.parse(fs.readFileSync(__dirname + "/config.json", 'utf8'));
+let fbconn = Object.assign(new FB.FirebirdDriver(), jsonConf.localDatabase);
+let conf = ClientConfig_1.ClientConfiguration.createFromJson(jsonConf, fbconn);
 //import '../Drivers/Firebird.js'
 /*
 const source: FirebirdDriver = new FirebirdDriver();
@@ -47,12 +51,9 @@ dest.configName = "TST";*/
 const configMgr = new mockConfigMgr();
 configMgr.configName = "TST";
 */
-let conf = ClientConfig_1.ClientConfiguration.createFromJson(__dirname + "/config.json");
+//let conf = ClientConfiguration.createFromJson(__dirname + "/config.json", null);
 const repl = new Replicator_1.Replicator(conf);
 repl.initializeLocalNode()
-    .catch((reason) => {
-    console.log("Error initializing: " + reason.message);
-})
     .then(() => {
     //console.log(repl.nodeConfig);
     //console.log(repl.cloudNodeConfig);
@@ -63,6 +64,9 @@ repl.initializeLocalNode()
         .catch(err => {
         console.log("Error replicating: " + err.message);
     });
+})
+    .catch((reason) => {
+    console.log("Error initializing: " + reason.message);
 });
 //repl.configMgr = configMgr;
 /*repl.initializeNode(repl.sourceNode)

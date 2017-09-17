@@ -9,8 +9,8 @@ export class ClientConfiguration{
     localDatabase: Driver;
     cloudURL?: string;
     
-    static createFromJson(json: any): ClientConfiguration {
-        json.localDatabase = Driver.createFromJson(json.localDatabase);        
+    static createFromJson(json: any, driver: Driver): ClientConfiguration {
+        json.localDatabase = driver;//Driver.createFromJson(json.localDatabase);        
         json.localNode = Object.assign(new Node(), json.localNode);
         
         //Create a fresh Configuration, shallow-copy the properties from the JSON, 

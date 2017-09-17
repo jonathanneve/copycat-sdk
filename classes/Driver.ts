@@ -28,7 +28,7 @@ export abstract class Driver implements IDriver {
 
     static createFromJson(json: IDriver): Driver {
         let driver = Object.create(drivers[json.driverName].prototype);
-        driver = driver.constructor();
+        driver.constructor.apply(driver);
         driver = Object.assign(driver, json);
         return driver;        
     }
@@ -49,14 +49,14 @@ export abstract class Driver implements IDriver {
     abstract clearReplicationMetadata(): Promise<void>;
 
     abstract listTables(fullFieldDefs: boolean): Promise<DB.TableDefinition[]>;
-    abstract createTable(table: DB.TableDefinition): Promise<void>;
-    abstract updateTable(table: DB.TableDefinition): Promise<void>;
+    abstract createOrUpdateTable(table: DB.TableDefinition): Promise<void>;    
 
     /*customMetadataExists(objectName: string, objectType: string): boolean;
     createCustomMetadata(metadata: DB.CustomMetadataDefinition): void;*/
 }
 
-var drivers: { [id: string]: typeof Driver} = {};
+export var drivers: { [id: string]: typeof Driver} = {};
 export function addDriver(driverName: string, driverType: typeof Driver) {
     drivers[driverName] = driverType;
 }
+console.log('Driver module initialized')

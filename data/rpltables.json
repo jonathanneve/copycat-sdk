@@ -1,6 +1,6 @@
 [
     {
-        "tableName": "RPL$LOG",
+        "tableName": "CC$LOG",
         "primaryKeys": ["CODE"],
         "fieldDefs": [
             {"fieldName": "CODE", "dataTypeStr": "Integer", "notNull": true},
@@ -19,7 +19,7 @@
         ]          
     },
     {
-        "tableName": "RPL$LOG_VALUES",
+        "tableName": "CC$LOG_VALUES",
         "primaryKeys": ["NODE_NAME", "CHANGE_NUMBER", "FIELD_NAME"],
         "fieldDefs": [
             {"fieldName": "NODE_NAME", "dataTypeStr": "String", "length": 50, "notNull": true},
@@ -35,7 +35,7 @@
         ]          
     },
     {
-        "tableName": "RPL$USERS",
+        "tableName": "CC$USERS",
         "primaryKeys": ["LOGIN"],
         "fieldDefs": [
             {"fieldName": "LOGIN", "dataTypeStr": "String", "length": 50, "notNull": true},
@@ -46,12 +46,20 @@
         ]          
     },
     {
-        "tableName": "RPL$BLOCKS",
+        "tableName": "CC$BLOCKS",
         "primaryKeys": ["TR_NUMBER", "CODE", "NODE_NAME"],
         "fieldDefs": [
             {"fieldName": "TR_NUMBER", "dataTypeStr": "Integer", "notNull": true},
             {"fieldName": "CODE", "dataTypeStr": "Integer", "notNull": true},
             {"fieldName": "NODE_NAME", "dataTypeStr": "String", "length": 50, "notNull": true}            
         ]          
-    }    
+    },
+    {
+        "tableName": "CC$TABLES",
+        "primaryKeys": ["TABLE_NAME"],
+        "fieldDefs": [
+            {"fieldName": "TABLE_NAME", "dataTypeStr": "String", "length": 50, "notNull": true},
+            {"fieldName": "COUNTER", "dataTypeStr": "Integer"}            
+        ]          
+    }       
 ]

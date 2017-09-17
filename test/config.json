@@ -1,13 +1,17 @@
 {
-    "userName": "jonneve2",
-    "configName": "test",
-    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiam9ubmV2ZTIiLCJub2RlIjoiSDFlVEVnUGRXL3Rlc3QiLCJpYXQiOjE1MDMyMjkxMTJ9.4fVYqfN5mo_SSyUPF71o2aEmAjLSb-8Z2hVEr7WUBBE",
+    "username": "jonneve",
+    "configName": "1031",
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub2RlIjoxMDMyLCJpYXQiOjE1MDU1NjA5NDd9.-KfEUnrbPk--shw8w7Ho_u67kZArKnq8gz0UZ0pCv74",
     "localDatabase": {
             "driverName": "FirebirdDriver",
-            "database": "localhost/3050:c:\\test.fdb",
-			"databaseVersion": "FB25",
-			"username" : "SYSDBA",
-			"password" : "masterkey"			
+            "configName" : "1",
+            "connectionParams": {
+                "database": "localhost/3050:c:\\temp\\evolution.fdb",
+                "databaseVersion": "FB30",
+                "username" : "SYSDBA",
+                "password" : "masterkey",
+                "role": ""
+            }
     },
     "cloudURL": "http://localhost:3000"
 }

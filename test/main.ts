@@ -2,8 +2,14 @@ import {Replicator} from '../classes/Replicator'
 import * as DB from '../classes/DB'
 //import {ConfigMgr, TableOptions, NodeOptions} from '../ConfigMgr'
 import {RestClient} from '../classes/drivers/Rest'
-//import * as FB from '../classes/drivers/Firebird'
-import {ClientConfiguration} from '../interfaces/ClientConfig'
+import * as FB from './Firebird' 
+import { ClientConfiguration } from '../interfaces/ClientConfig'
+import fs = require('fs');
+
+let jsonConf = JSON.parse(fs.readFileSync(__dirname + "/config.json", 'utf8'));
+let fbconn = Object.assign(new FB.FirebirdDriver(), jsonConf.localDatabase);
+let conf = ClientConfiguration.createFromJson(jsonConf, fbconn);
+
 //import '../Drivers/Firebird.js'
 /*
 const source: FirebirdDriver = new FirebirdDriver();
@@ -51,12 +57,9 @@ const configMgr = new mockConfigMgr();
 configMgr.configName = "TST";
 */
 
-let conf = ClientConfiguration.createFromJson(__dirname + "/config.json");
+//let conf = ClientConfiguration.createFromJson(__dirname + "/config.json", null);
 const repl = new Replicator(conf);
 repl.initializeLocalNode()
-.catch((reason:any)=> {
-    console.log("Error initializing: " + reason.message);
-})
 .then(() => {
     //console.log(repl.nodeConfig);
     //console.log(repl.cloudNodeConfig);
@@ -67,7 +70,10 @@ repl.initializeLocalNode()
     .catch(err => {
         console.log("Error replicating: " + err.message);
     });    
-})
+    })
+    .catch((reason:any)=> {
+        console.log("Error initializing: " + reason.message);
+    })
 
 //repl.configMgr = configMgr;
 

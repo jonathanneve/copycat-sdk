@@ -33,7 +33,7 @@ export abstract class SQLDriver extends Driver {
     protected abstract startTransaction(): Promise<void>;
     protected abstract commit(): Promise<void>;
     protected abstract rollback(): Promise<void>;
-    protected abstract executeSQL(sql: string, fetchResultSet?: boolean, 
+    protected abstract executeSQL(sql: string, autocreateTR: boolean, fetchResultSet?: boolean, 
         callback?: (record: DB.Record) => Promise<boolean | void>,
         params?: Object[]): Promise<boolean>;
     
@@ -64,7 +64,7 @@ export abstract class SQLDriver extends Driver {
 
         if (! await this.isConnected())
             await this.connect();
-        return await this.executeSQL(sql, true, callback, params);
+        return await this.executeSQL(sql, true, true, callback, params);
     }
 
     protected async exec(sql: string, namedParams?: DB.Field[], unnamedParams?: Object[]): Promise<void> {
@@ -73,13 +73,13 @@ export abstract class SQLDriver extends Driver {
         
         if (! await this.isConnected())
           await this.connect();
-        await this.executeSQL(sql, false, null, params);
+        await this.executeSQL(sql, true, false, null, params);
     }
 
     //Meta-data queries
     protected abstract dropTable(tableName: string): Promise<void>;
     protected abstract tableExists(tableName: string): Promise<boolean>;    
-//    abstract createTable(table: DB.TableDefinition): Promise<void>;
+    abstract createTable(table: DB.TableDefinition): Promise<void>;
 //    abstract updateTable(table: DB.TableDefinition): Promise<void>;
     
     //Replication meta-data

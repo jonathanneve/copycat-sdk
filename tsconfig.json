@@ -16,6 +16,7 @@
   },
   "include": [
     "classes/**/*.ts",
+    "classes/drivers/*.ts",
     "interfaces/**/*.ts",
     "test/**/*.ts"
   ],

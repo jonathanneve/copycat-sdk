@@ -41,9 +41,9 @@ class Replicator {
                 //Cycle through local tables and check if they exist on the cloud
                 for (let localTable of localTables) {
                     let shouldRepl;
-                    if (this.node.syncToCloud.tables)
+                    if (this.node.syncToCloud.tables && this.node.syncToCloud.tables.length > 0)
                         shouldRepl = (this.node.syncToCloud.tables.find((t) => (t.tableName == localTable.tableName)) != null);
-                    else if (this.node.syncToCloud.excludedTables)
+                    else if (this.node.syncToCloud.excludedTables && this.node.syncToCloud.excludedTables.length > 0)
                         shouldRepl = (this.node.syncToCloud.excludedTables.find((val) => (val == localTable.tableName)) == null);
                     else
                         shouldRepl = true;
