@@ -40,8 +40,8 @@ export abstract class SQLDriver extends Driver {
     private processParams(sql: string, resultParams: Object[], namedParams?: DB.Field[], unnamedParams?: Object[]): string{
         let unnamedParamIndex = 0;
         if (namedParams || unnamedParams) {
-            //TODO: replace param names by ? and add corresponding values to params in the right position
-            sql = sql.replace(/(:\w+)|\?/g, (substr: string): string => {
+            //Replace param names by ? and add corresponding values to params in the right position
+            sql = sql.replace(/(:(("[^"]+?")|(\w+)))|\?/g, (substr: string): string => {
                 if (substr == "?"){
                     if (unnamedParams) {
                         resultParams.push(unnamedParams[unnamedParamIndex]);
@@ -50,7 +50,9 @@ export abstract class SQLDriver extends Driver {
                 }
                 else if (namedParams) {
                     let paramName = substr.substring(1);
-                    let param = namedParams.find(p => p.fieldName == paramName);
+                    if (paramName.substring(0, 1) == '"')
+                        paramName = paramName.substring(1, paramName.length-1)    
+                    let param = namedParams.find(p => p.fieldName.toLowerCase() == paramName.toLowerCase());
                     resultParams.push(param.value);
                 }
                 return "?";
@@ -337,7 +339,7 @@ export abstract class SQLDriver extends Driver {
             await this.rollback();
             throw E;
         }
-        await this.disconnect();
+        //await this.disconnect();
     }
 
 }

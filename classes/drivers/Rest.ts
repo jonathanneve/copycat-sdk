@@ -106,7 +106,8 @@ export class RestClient extends Driver {
     }
 
     async initReplicationMetadata(): Promise<void> {
-        await this.doPost<Object>(this.baseURL + '/api/v1/node/init_repl', {});
+        await this.httpClient.post(this.baseURL + '/api/v1/node/init_repl', '', this.requestOptions)
+        //await this.doPost<Object>(this.baseURL + '/api/v1/node/init_repl', {});
     }
     async clearReplicationMetadata(): Promise<void> {
         throw new Error('Method not implemented.');

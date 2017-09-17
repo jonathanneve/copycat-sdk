@@ -29,8 +29,8 @@ class SQLDriver extends Driver_1.Driver {
     processParams(sql, resultParams, namedParams, unnamedParams) {
         let unnamedParamIndex = 0;
         if (namedParams || unnamedParams) {
-            //TODO: replace param names by ? and add corresponding values to params in the right position
-            sql = sql.replace(/(:\w+)|\?/g, (substr) => {
+            //Replace param names by ? and add corresponding values to params in the right position
+            sql = sql.replace(/(:(("[^"]+?")|(\w+)))|\?/g, (substr) => {
                 if (substr == "?") {
                     if (unnamedParams) {
                         resultParams.push(unnamedParams[unnamedParamIndex]);
@@ -39,7 +39,9 @@ class SQLDriver extends Driver_1.Driver {
                 }
                 else if (namedParams) {
                     let paramName = substr.substring(1);
-                    let param = namedParams.find(p => p.fieldName == paramName);
+                    if (paramName.substring(0, 1) == '"')
+                        paramName = paramName.substring(1, paramName.length - 1);
+                    let param = namedParams.find(p => p.fieldName.toLowerCase() == paramName.toLowerCase());
                     resultParams.push(param.value);
                 }
                 return "?";
@@ -180,19 +182,19 @@ class SQLDriver extends Driver_1.Driver {
     }
     getSQLStatement(record) {
         if (record.operationType == "I") {
-            return 'insert into ' + record.tableName + " ( " +
-                record.changedFields.map(f => f.fieldName).join(', ') +
+            return 'insert into "' + record.tableName.toLowerCase() + '" ( ' +
+                record.changedFields.map(f => '"' + f.fieldName.toLowerCase() + '"').join(', ') +
                 ' ) values (' +
-                record.changedFields.map(f => ":" + f.fieldName).join(', ') +
+                record.changedFields.map(f => ':"' + f.fieldName.toLowerCase() + '"').join(', ') +
                 ')';
         }
         else if (record.operationType == "U") {
-            return 'update ' + record.tableName + " set " +
-                record.changedFields.map(f => f.fieldName + " = :" + f.fieldName).join(', ') +
+            return 'update "' + record.tableName.toLowerCase() + '" set ' +
+                record.changedFields.map(f => '"' + f.fieldName.toLowerCase() + '" = :"' + f.fieldName.toLowerCase() + '"').join(', ') +
                 this.getWhereClause(record);
         }
         else if (record.operationType == "D") {
-            return 'delete from ' + record.tableName + " " + this.getWhereClause(record);
+            return 'delete from "' + record.tableName.toLowerCase() + '" ' + this.getWhereClause(record);
         }
     }
     parseKeys(keys) {
@@ -253,7 +255,7 @@ class SQLDriver extends Driver_1.Driver {
         });
     }
     getWhereClause(record) {
-        return ' where ' + record.primaryKeys.map(f => f.fieldName + " = ?").join(' and ');
+        return ' where ' + record.primaryKeys.map(f => '"' + f.fieldName.toLowerCase() + '" = ?').join(' and ');
     }
     getWhereFieldValues(record) {
         return record.primaryKeys.map(f => f.value);
@@ -292,7 +294,7 @@ class SQLDriver extends Driver_1.Driver {
                 yield this.rollback();
                 throw E;
             }
-            yield this.disconnect();
+            //await this.disconnect();
         });
     }
 }

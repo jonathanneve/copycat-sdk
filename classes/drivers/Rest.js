@@ -122,7 +122,8 @@ class RestClient extends Driver_1.Driver {
     }
     initReplicationMetadata() {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.doPost(this.baseURL + '/api/v1/node/init_repl', {});
+            yield this.httpClient.post(this.baseURL + '/api/v1/node/init_repl', '', this.requestOptions);
+            //await this.doPost<Object>(this.baseURL + '/api/v1/node/init_repl', {});
         });
     }
     clearReplicationMetadata() {
