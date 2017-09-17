@@ -215,19 +215,19 @@ export abstract class SQLDriver extends Driver {
 
     protected getSQLStatement(record: ReplicationRecord): string {
         if (record.operationType == "I") {
-            return 'insert into ' + record.tableName + " ( " +
-                record.changedFields.map<string>(f => f.fieldName).join(', ') +
+            return 'insert into "' + record.tableName.toLowerCase() + '" ( ' +
+                record.changedFields.map<string>(f => '"' + f.fieldName.toLowerCase() + '"').join(', ') +
                 ' ) values (' +
-                record.changedFields.map<string>(f => ":" + f.fieldName).join(', ') +
+                record.changedFields.map<string>(f => ':"' + f.fieldName.toLowerCase() + '"').join(', ') +
                 ')';                
         }
         else if (record.operationType == "U") {
-            return 'update ' + record.tableName + " set " +
-                record.changedFields.map<string>(f => f.fieldName + " = :" + f.fieldName).join(', ') +
+            return 'update "' + record.tableName.toLowerCase() + '" set ' +
+                record.changedFields.map<string>(f => '"' + f.fieldName.toLowerCase() + '" = :"' + f.fieldName.toLowerCase() + '"').join(', ') +
                 this.getWhereClause(record);               
         }
         else if (record.operationType == "D") {
-            return 'delete from ' + record.tableName + " " + this.getWhereClause(record);
+            return 'delete from "' + record.tableName.toLowerCase() + '" ' + this.getWhereClause(record);
         }
     }
 
@@ -292,7 +292,7 @@ export abstract class SQLDriver extends Driver {
     }
 
     protected getWhereClause(record: ReplicationRecord): string {
-        return ' where ' + record.primaryKeys.map<string>(f => f.fieldName + " = ?").join(' and ');
+        return ' where ' + record.primaryKeys.map<string>(f => '"' + f.fieldName.toLowerCase() + '" = ?').join(' and ');
     }
     protected getWhereFieldValues(record: ReplicationRecord): Object[]{
         return record.primaryKeys.map(f => f.value);    

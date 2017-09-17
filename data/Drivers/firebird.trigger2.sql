@@ -33,7 +33,7 @@ begin
     when 10 then 11 when 27 then 11 when 12 then 13
     when 13 then 14
     when 35 then 12
-    when 14 then 2
+    when 14 then 2 
     when 37 then 1
     when 40 then 1
     when 261 then iif(rdb$field_sub_type = 0, 4, 3)

@@ -106,8 +106,7 @@ export class RestClient extends Driver {
     }
 
     async initReplicationMetadata(): Promise<void> {
-        throw new Error('Method not implemented.');
-//        return await this.doPost<void>(this.baseURL + '/api/v1/users/' + this.userID.toString() + '/configs/' + this.configID.toString() + '/initReplicationMetadata', '');                      
+        await this.doPost<Object>(this.baseURL + '/api/v1/node/init_repl', {});
     }
     async clearReplicationMetadata(): Promise<void> {
         throw new Error('Method not implemented.');

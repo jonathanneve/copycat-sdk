@@ -482,7 +482,7 @@ class FirebirdDriver extends SQLDriver_1.SQLDriver {
                 "where rel.rdb$constraint_type = 'PRIMARY KEY' " +
                 'and rel.rdb$relation_name = ? ' +
                 'order by i.rdb$field_position', null, [tableName], (record) => __awaiter(this, void 0, void 0, function* () {
-                keys.push(record.fieldByName('pk_name').value);
+                keys.push(record.fieldByName('pk_name').value.trim());
             }));
             return keys;
         });
@@ -502,12 +502,16 @@ class FirebirdDriver extends SQLDriver_1.SQLDriver {
                 if (fullFieldDefs) {
                     fieldDef.dataType = this.convertDataType(fieldRec.fieldByName('rdb$field_type').value, fieldRec.fieldByName('rdb$field_sub_type').value);
                     fieldDef.notNull = (fieldRec.fieldByName('rdb$null_flag').value == 1);
-                    fieldDef.precision = fieldRec.fieldByName('rdb$field_precision').value;
                     if (fieldDef.dataType == DB.DataType.BCD) {
+                        if (fieldRec.fieldByName('rdb$field_precision').isNull())
+                            fieldDef.precision = 18;
+                        else
+                            fieldDef.precision = fieldRec.fieldByName('rdb$field_precision').value;
                         fieldDef.scale = -1 * fieldRec.fieldByName('rdb$field_scale').value;
                         fieldDef.length = 0;
                     }
                     else {
+                        fieldDef.precision = fieldRec.fieldByName('rdb$field_precision').value;
                         fieldDef.scale = fieldRec.fieldByName('rdb$field_scale').value;
                         fieldDef.length = fieldRec.fieldByName('field_length').value;
                     }
@@ -523,7 +527,9 @@ class FirebirdDriver extends SQLDriver_1.SQLDriver {
     listTables(fullFieldDefs) {
         return __awaiter(this, void 0, void 0, function* () {
             let tableDefs = [];
-            yield this.query("select rdb$relation_name from rdb$relations where rdb$system_flag = 0 and rdb$view_blr is null and not rdb$relation_name starting with 'CC$'", [], [], (tableRec) => __awaiter(this, void 0, void 0, function* () {
+            yield this.query("select rdb$relation_name from rdb$relations "
+                + "where rdb$system_flag = 0 and coalesce(rdb$relation_type, 0) = 0 and rdb$view_blr is null "
+                + "and not rdb$relation_name starting with 'CC$'", [], [], (tableRec) => __awaiter(this, void 0, void 0, function* () {
                 let tableDef = yield this.getTableDef(tableRec.fieldByName('rdb$relation_name').value.trim(), fullFieldDefs);
                 tableDefs.push(tableDef);
             }));

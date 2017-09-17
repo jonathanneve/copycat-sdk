@@ -122,8 +122,7 @@ class RestClient extends Driver_1.Driver {
     }
     initReplicationMetadata() {
         return __awaiter(this, void 0, void 0, function* () {
-            throw new Error('Method not implemented.');
-            //        return await this.doPost<void>(this.baseURL + '/api/v1/users/' + this.userID.toString() + '/configs/' + this.configID.toString() + '/initReplicationMetadata', '');                      
+            yield this.doPost(this.baseURL + '/api/v1/node/init_repl', {});
         });
     }
     clearReplicationMetadata() {

@@ -59,22 +59,27 @@ configMgr.configName = "TST";
 
 //let conf = ClientConfiguration.createFromJson(__dirname + "/config.json", null);
 const repl = new Replicator(conf);
-repl.initializeLocalNode()
-.then(() => {
+//repl.initializeLocalNode()
+//.then(() => {
     //console.log(repl.nodeConfig);
     //console.log(repl.cloudNodeConfig);
-    repl.replicate()    
-    .then(() => {
-        console.log("done");
-    })
-    .catch(err => {
-        console.log("Error replicating: " + err.message);
-    });    
-    })
-    .catch((reason:any)=> {
-        console.log("Error initializing: " + reason.message);
-    })
-
+  //  console.log('initialization finished')
+/*repl.initializeCloudDatabase()
+.then(() => {
+    console.log("cloud initialization done, replicating...");
+    return repl.replicate()
+})*/
+repl.replicate().then(() => {
+    console.log("replication done");
+})
+.catch(err => {
+    console.log("Error : " + err.message);
+});    
+/*})
+.catch((reason:any)=> {
+    console.log("Error initializing: " + reason.message);
+})
+*/
 //repl.configMgr = configMgr;
 
 /*repl.initializeNode(repl.sourceNode)

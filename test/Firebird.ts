@@ -462,7 +462,7 @@ export class FirebirdDriver extends SQLDriver {
             "where rel.rdb$constraint_type = 'PRIMARY KEY' " +
             'and rel.rdb$relation_name = ? '+
             'order by i.rdb$field_position', null, [tableName], async (record: DB.Record) => {
-                keys.push(<string>record.fieldByName('pk_name').value);
+                keys.push((<string>record.fieldByName('pk_name').value).trim());
             })
         return keys;
     }
@@ -482,12 +482,16 @@ export class FirebirdDriver extends SQLDriver {
                 if (fullFieldDefs) {
                     fieldDef.dataType = this.convertDataType(<number>fieldRec.fieldByName('rdb$field_type').value, <number>fieldRec.fieldByName('rdb$field_sub_type').value);
                     fieldDef.notNull = (fieldRec.fieldByName('rdb$null_flag').value == 1);
-                    fieldDef.precision =  <number>fieldRec.fieldByName('rdb$field_precision').value;
                     if (fieldDef.dataType == DB.DataType.BCD) {
+                        if (fieldRec.fieldByName('rdb$field_precision').isNull())
+                            fieldDef.precision = 18
+                        else
+                            fieldDef.precision = <number>fieldRec.fieldByName('rdb$field_precision').value;
                         fieldDef.scale = -1 * <number>fieldRec.fieldByName('rdb$field_scale').value;
                         fieldDef.length = 0;
                     }
                     else {
+                        fieldDef.precision =  <number>fieldRec.fieldByName('rdb$field_precision').value;
                         fieldDef.scale = <number>fieldRec.fieldByName('rdb$field_scale').value;
                         fieldDef.length = <number>fieldRec.fieldByName('field_length').value;                     
                     }
@@ -502,7 +506,9 @@ export class FirebirdDriver extends SQLDriver {
     
     async listTables(fullFieldDefs: boolean): Promise<DB.TableDefinition[]>{
         let tableDefs: DB.TableDefinition[] = [];
-        await this.query("select rdb$relation_name from rdb$relations where rdb$system_flag = 0 and rdb$view_blr is null and not rdb$relation_name starting with 'CC$'", [], [], async(tableRec: DB.Record) => {
+        await this.query("select rdb$relation_name from rdb$relations "
+            + "where rdb$system_flag = 0 and coalesce(rdb$relation_type, 0) = 0 and rdb$view_blr is null "
+            + "and not rdb$relation_name starting with 'CC$'", [], [], async (tableRec: DB.Record) => {
             let tableDef = await this.getTableDef((<string>tableRec.fieldByName('rdb$relation_name').value).trim(), fullFieldDefs);
             tableDefs.push(tableDef);
         });

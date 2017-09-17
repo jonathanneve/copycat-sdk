@@ -12,9 +12,9 @@ declare variable counter integer;
 declare variable dbkey char(8) character set octets;
 declare variable change_number integer;
 begin
-  if (rdb$get_context('USER_TRANSACTION', 'RPL$NO_REPLICATION') = 'TRUE') then exit;
-  change_number = gen_id(gen_rpl$log_change_number, 1);
-  insert into rpl$tmp_changes(change_number) values (:change_number);
+  if (rdb$get_context('USER_TRANSACTION', 'CC$NO_REPLICATION') = 'TRUE') then exit;
+  change_number = gen_id(gen_CC$log_change_number, 1);
+  insert into CC$tmp_changes(change_number) values (:change_number);
   if (inserting) then exit;
   if (deleting) then
     dbkey = old.rdb$db_key;
@@ -53,7 +53,7 @@ begin
       if (character_length(stmt) >= 4000 or octet_length(stmt) >= 10000 or counter >= 100) then begin
         for execute statement (stmt) %EXEC_STMT_PARAM% into :field_name, :val, :val_blob, :field_type do  begin
           if (val is not null or val_blob is not null) then
-            update or insert into rpl$tmp_values(field_name,field_type,old_value,old_blob, old_blob_null, change_number) values (trim(:field_name), :field_type, :val, :val_blob, iif(:val_blob is null, 'Y', 'N'), :change_number);
+            update or insert into CC$tmp_values(field_name,field_type,old_value,old_blob, old_blob_null, change_number) values (trim(:field_name), :field_type, :val, :val_blob, iif(:val_blob is null, 'Y', 'N'), :change_number);
         end
         stmt = null;
         counter = 0;
@@ -63,7 +63,7 @@ begin
   if (stmt is not null) then begin
     for execute statement (stmt) %EXEC_STMT_PARAM% into :field_name, :val, :val_blob, :field_type do  begin
       if (val is not null or val_blob is not null) then
-        update or insert into rpl$tmp_values(field_name,field_type,old_value,old_blob, old_blob_null, change_number) values (trim(:field_name), :field_type, :val, :val_blob, iif(:val_blob is null, 'Y', 'N'), :change_number);
+        update or insert into CC$tmp_values(field_name,field_type,old_value,old_blob, old_blob_null, change_number) values (trim(:field_name), :field_type, :val, :val_blob, iif(:val_blob is null, 'Y', 'N'), :change_number);
     end
   end
 end

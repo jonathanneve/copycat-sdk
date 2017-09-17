@@ -35,13 +35,17 @@ export class Replicator {
     }
 
     async initializeLocalNode(): Promise<void> {
+        console.log('getting node info')
         await this.refreshConfig();
         
+        console.log('initializing replication tables')
         let localDB = <SQLDriver>this.localConfig.localDatabase;
         await localDB.initReplicationMetadata();
-      
+
+        console.log('getting list of tables')
+        
         let localTables = await localDB.listTables(true);
-        if (this.node.syncToCloud) {
+        if (this.node.syncToCloud && this.node.syncToCloud.replicate) {
             //Get lists of existing tables 
             let cloudTables = await this.cloudConnection.listTables(false);
 
@@ -99,6 +103,10 @@ export class Replicator {
         }
     }
 
+    async initializeCloudDatabase(): Promise<void>  {
+        await this.cloudConnection.initReplicationMetadata();
+    }
+
     async replicate() {
         let doRepl = async (srcDB: Driver, srcNode: string, destDB: Driver, destNode: string) => {
             let transactions: number[] = await srcDB.getTransactionsToReplicate(destNode);
@@ -118,9 +126,9 @@ export class Replicator {
         };
         await this.refreshConfig();
         
-        if (this.node.syncToCloud) 
+        if (this.node.syncToCloud && this.node.syncToCloud.replicate) 
             await doRepl(this.localConfig.localDatabase, this.localConfig.localNode.nodeName, this.cloudConnection, 'CLOUD');
-        if (this.node.syncFromCloud) 
+        if (this.node.syncFromCloud && this.node.syncFromCloud.replicate) 
             await doRepl(this.cloudConnection, 'CLOUD', this.localConfig.localDatabase, this.localConfig.localNode.nodeName);
     }
 }

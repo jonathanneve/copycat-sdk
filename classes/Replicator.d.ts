@@ -12,5 +12,6 @@ export declare class Replicator {
     refreshConfig(): Promise<void>;
     createLocalTriggers(localDB: SQLDriver, tableName: string): Promise<void>;
     initializeLocalNode(): Promise<void>;
+    initializeCloudDatabase(): Promise<void>;
     replicate(): Promise<void>;
 }

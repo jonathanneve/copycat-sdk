@@ -33,11 +33,14 @@ class Replicator {
     }
     initializeLocalNode() {
         return __awaiter(this, void 0, void 0, function* () {
+            console.log('getting node info');
             yield this.refreshConfig();
+            console.log('initializing replication tables');
             let localDB = this.localConfig.localDatabase;
             yield localDB.initReplicationMetadata();
+            console.log('getting list of tables');
             let localTables = yield localDB.listTables(true);
-            if (this.node.syncToCloud) {
+            if (this.node.syncToCloud && this.node.syncToCloud.replicate) {
                 //Get lists of existing tables 
                 let cloudTables = yield this.cloudConnection.listTables(false);
                 //Cycle through local tables and check if they exist on the cloud
@@ -90,6 +93,11 @@ class Replicator {
             }
         });
     }
+    initializeCloudDatabase() {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.cloudConnection.initReplicationMetadata();
+        });
+    }
     replicate() {
         return __awaiter(this, void 0, void 0, function* () {
             let doRepl = (srcDB, srcNode, destDB, destNode) => __awaiter(this, void 0, void 0, function* () {
@@ -109,9 +117,9 @@ class Replicator {
                 }
             });
             yield this.refreshConfig();
-            if (this.node.syncToCloud)
+            if (this.node.syncToCloud && this.node.syncToCloud.replicate)
                 yield doRepl(this.localConfig.localDatabase, this.localConfig.localNode.nodeName, this.cloudConnection, 'CLOUD');
-            if (this.node.syncFromCloud)
+            if (this.node.syncFromCloud && this.node.syncFromCloud.replicate)
                 yield doRepl(this.cloudConnection, 'CLOUD', this.localConfig.localDatabase, this.localConfig.localNode.nodeName);
         });
     }
