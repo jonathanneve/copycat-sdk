@@ -19,7 +19,6 @@ export interface BlockCallback {
 export declare abstract class Driver implements IDriver {
     driverName: string;
     configName: string;
-    databaseVersion: string;
     connectionParams: any;
     static createFromJson(json: IDriver): Driver;
     abstract getTransactionsToReplicate(destNode: string): Promise<number[]>;

@@ -67,8 +67,8 @@ class SQLDriver extends Driver_1.Driver {
     }
     addNode(nodeName) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!(yield this.query("select login from RPL$USERS where login = ?", null, [nodeName])))
-                yield this.exec('insert into RPL$USERS (LOGIN, CONFIG_NAME) values (?, ?)', null, [nodeName, this.configName]);
+            if (!(yield this.query("select login from CC$USERS where login = ?", null, [nodeName])))
+                yield this.exec('insert into CC$USERS (LOGIN, CONFIG_NAME) values (?, ?)', null, [nodeName, this.configName]);
             if (yield this.inTransaction())
                 yield this.commit();
         });
@@ -112,9 +112,9 @@ class SQLDriver extends Driver_1.Driver {
         return __awaiter(this, void 0, void 0, function* () {
             let transactions = [];
             //First get rid of previous replication cycles
-            yield this.exec('delete from RPL$BLOCKS where node_name = ?', null, [destNode]);
+            yield this.exec('delete from CC$BLOCKS where node_name = ?', null, [destNode]);
             yield this.commit();
-            yield this.query("select transaction_number, max(code) from RPL$LOG where login = ? " +
+            yield this.query("select transaction_number, max(code) from CC$LOG where login = ? " +
                 "group by transaction_number order by 2", null, [destNode], (record) => __awaiter(this, void 0, void 0, function* () {
                 transactions.push(record.fieldByName('transaction_number').value);
             }));
@@ -130,7 +130,7 @@ class SQLDriver extends Driver_1.Driver {
             //to false only if there are more than BLOCKSIZE records
             block.transactionFinished = true;
             block.maxCode = -1;
-            yield this.query('select * from rpl$log where transaction_number = ? and login = ? and code > ? order by code', null, [transaction_number, destNode, minCode], (record) => __awaiter(this, void 0, void 0, function* () {
+            yield this.query('select * from CC$log where transaction_number = ? and login = ? and code > ? order by code', null, [transaction_number, destNode, minCode], (record) => __awaiter(this, void 0, void 0, function* () {
                 let rec = new Driver_1.ReplicationRecord();
                 let pkFields = this.parseKeys(record.fieldByName('primary_key_fields').value);
                 let pkValues = this.parseKeys(record.fieldByName('primary_key_values').value);
@@ -156,7 +156,7 @@ class SQLDriver extends Driver_1.Driver {
     getChangedFields(change_number, nodeName) {
         return __awaiter(this, void 0, void 0, function* () {
             let fields = [];
-            yield this.query("select * from RPL$LOG_VALUES where CHANGE_NUMBER = ? and node_name = ?", null, [change_number, nodeName], (record) => __awaiter(this, void 0, void 0, function* () {
+            yield this.query("select * from CC$LOG_VALUES where CHANGE_NUMBER = ? and node_name = ?", null, [change_number, nodeName], (record) => __awaiter(this, void 0, void 0, function* () {
                 let f = new DB.Field();
                 f.fieldName = record.fieldByName('field_name').value;
                 if (record.fieldByName('new_value_blob').isNull)
@@ -171,7 +171,7 @@ class SQLDriver extends Driver_1.Driver {
     }
     validateBlock(transaction_number, maxCode, destNode) {
         return __awaiter(this, void 0, void 0, function* () {
-            let sql = 'delete from RPL$LOG where transaction_number = ? and login = ?';
+            let sql = 'delete from CC$LOG where transaction_number = ? and login = ?';
             if (maxCode > -1)
                 sql = sql + " and code <= ?";
             yield this.exec(sql, null, [transaction_number, destNode, maxCode]);
@@ -265,11 +265,11 @@ class SQLDriver extends Driver_1.Driver {
                 yield this.connect();
             yield this.startTransaction();
             try {
-                //Check if transactionID/blockID is in RPL$BLOCKS
+                //Check if transactionID/blockID is in CC$BLOCKS
                 //If so, the block has already been replicated: do nothing
-                if (!(yield this.query("select code from RPL$BLOCKS where TR_NUMBER = ? and CODE = ? and NODE_NAME = ?", null, [block.transactionID, block.maxCode, origNode]))) {
-                    //Insert blockID into RPL$TRANSACTIONS
-                    yield this.exec('insert into RPL$BLOCKS (TR_NUMBER, CODE, NODE_NAME) values (?, ?, ?)', null, [block.transactionID, block.maxCode, origNode]);
+                if (!(yield this.query("select code from CC$BLOCKS where TR_NUMBER = ? and CODE = ? and NODE_NAME = ?", null, [block.transactionID, block.maxCode, origNode]))) {
+                    //Insert blockID into CC$TRANSACTIONS
+                    yield this.exec('insert into CC$BLOCKS (TR_NUMBER, CODE, NODE_NAME) values (?, ?, ?)', null, [block.transactionID, block.maxCode, origNode]);
                     //Initialize replicating node to avoid bouncing
                     yield this.setReplicatingNode(origNode);
                     //Replicate records in block

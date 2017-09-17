@@ -67,41 +67,42 @@ export class RestClient extends Driver {
     }    
         
     private async doGet<T>(url: string): Promise<T>{        
-        let res = await this.restClient.get<T>(url, this.requestOptions);                      
-        return new Promise<T>((resolve, reject) => {
-            if (res.statusCode != 200)
-                reject('HTTP error ' + res.statusCode.toString());
-            else 
-                resolve(res.result);            
-        });
+        let res = await this.restClient.get<T>(url, this.requestOptions);      
+        if (res.result)
+            return res.result;
+        else
+            throw new Error('Resource not found! HTTP result:' + res.statusCode);    
     }
     private async doPut<T>(url: string, obj: T): Promise<T>{
         let res = await this.restClient.replace<T>(url, obj, this.requestOptions);                      
-        return new Promise<T>((resolve, reject) => {
-            if (res.statusCode != 200)
+        return res.result;
+        /*return new Promise<T>((resolve, reject) => {
+            if (res.statusCode > 300)
                 reject('HTTP error ' + res.statusCode.toString());
             else 
                 resolve(res.result);            
-        });
+        });*/
     }
     private async doPost<T>(url: string, obj: T): Promise<T>{
         let res = await this.restClient.create<T>(url, obj, this.requestOptions);                      
-        return new Promise<T>((resolve, reject) => {
-            if (res.statusCode != 200)
+        return res.result;
+        /*return new Promise<T>((resolve, reject) => {
+            if (res.statusCode > 200)
                 reject('HTTP error ' + res.statusCode.toString());
             else 
                 resolve(res.result);            
-        });
+        });*/
     }
 
     private async doDelete<T>(url: string): Promise<T>{
         let res = await this.restClient.del<T>(url, this.requestOptions);                      
-        return new Promise<T>((resolve, reject) => {
+        return res.result;
+        /*return new Promise<T>((resolve, reject) => {
             if (res.statusCode != 200)
                 reject('HTTP error ' + res.statusCode.toString());
             else 
                 resolve(res.result);            
-        });
+        });*/
     }
 
     async initReplicationMetadata(): Promise<void> {

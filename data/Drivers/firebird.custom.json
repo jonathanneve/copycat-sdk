@@ -1,13 +1,13 @@
 [
     {
-        "objectName": "RPL$TMP_CHANGES",
+        "objectName": "CC$TMP_CHANGES",
         "objectType": "TABLE",
-        "SQL": ["CREATE GLOBAL TEMPORARY TABLE RPL$TMP_CHANGES (CHANGE_NUMBER  INTEGER NOT NULL primary key) ON COMMIT DELETE ROWS"]
+        "SQL": ["CREATE GLOBAL TEMPORARY TABLE CC$TMP_CHANGES (CHANGE_NUMBER  INTEGER NOT NULL primary key) ON COMMIT DELETE ROWS"]
     },
     {
-        "objectName": "RPL$TMP_VALUES",
+        "objectName": "CC$TMP_VALUES",
         "objectType": "TABLE",
-        "SQL":  ["CREATE GLOBAL TEMPORARY TABLE RPL$TMP_VALUES (",
+        "SQL":  ["CREATE GLOBAL TEMPORARY TABLE CC$TMP_VALUES (",
                 "FIELD_NAME     VARCHAR(50) NOT NULL,",
                 "CHANGE_NUMBER  INTEGER NOT NULL,",
                 "FIELD_TYPE     INTEGER NOT NULL,",
@@ -21,19 +21,19 @@
                 ") ON COMMIT DELETE ROWS"]
     },
     {
-        "objectName": "GEN_RPL$LOG",
+        "objectName": "GEN_CC$LOG",
         "objectType": "GENERATOR",
-        "SQL": ["create generator GEN_RPL$LOG"]
+        "SQL": ["create generator GEN_CC$LOG"]
     },
     {
-        "objectName": "GEN_RPL$LOG_CHANGE_NUMBER",
+        "objectName": "GEN_CC$LOG_CHANGE_NUMBER",
         "objectType": "GENERATOR",
-        "SQL": ["create generator GEN_RPL$LOG_CHANGE_NUMBER"]
+        "SQL": ["create generator GEN_CC$LOG_CHANGE_NUMBER"]
     },
     {
-        "objectName": "RPL$STRLEN",
+        "objectName": "CC$STRLEN",
         "objectType": "PROCEDURE",
-        "SQL": ["create or alter procedure RPL$STRLEN (",
+        "SQL": ["create or alter procedure CC$STRLEN (",
                 "    STR varchar(2000))",
                 "returns (",
                 "    LEN integer)",
@@ -52,9 +52,9 @@
         ]
     },      
     {
-        "objectName": "RPL$QUOTE_STR",
+        "objectName": "CC$QUOTE_STR",
         "objectType": "PROCEDURE",
-        "SQL": ["create or alter procedure RPL$QUOTE_STR (",
+        "SQL": ["create or alter procedure CC$QUOTE_STR (",
                 "    CSTR varchar(1000))",
                 "returns (",
                 "    QUOTED_STR varchar(1000))",
@@ -83,20 +83,20 @@
                 "end"]
     },
     {
-        "objectName": "TR_RPL$LOG",
+        "objectName": "TR_CC$LOG",
         "objectType": "TRIGGER",
-        "SQL": ["CREATE OR ALTER TRIGGER TR_RPL$LOG FOR RPL$LOG",
+        "SQL": ["CREATE OR ALTER TRIGGER TR_CC$LOG FOR CC$LOG",
                 "ACTIVE AFTER DELETE POSITION 0",
                 "as",
                 "begin",
-                "  delete from rpl$log_values where node_name = old.login and change_number = old.change_number;",
+                "  delete from CC$log_values where node_name = old.login and change_number = old.change_number;",
                 "end"]
     },
     {
-        "objectName": "RPL$FORCE_REPL",
+        "objectName": "CC$FORCE_REPL",
         "objectType": "PROCEDURE",
         "SQL": [
-			"CREATE PROCEDURE RPL$FORCE_REPL (config_name varchar(100), table_name varchar(50), sql_condition blob sub_type 1) returns (rows_affected integer) AS",
+			"CREATE PROCEDURE CC$FORCE_REPL (config_name varchar(100), table_name varchar(50), sql_condition blob sub_type 1) returns (rows_affected integer) AS",
 			"declare variable field_name varchar(50);",
 			"declare variable sql blob sub_type 1;",
 			"begin",

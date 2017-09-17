@@ -87,8 +87,8 @@ export abstract class SQLDriver extends Driver {
     protected abstract createCustomMetadata(metadata: DB.CustomMetadataDefinition): Promise<void>;
         
     async addNode(nodeName: string): Promise<void> {
-        if (!await this.query("select login from RPL$USERS where login = ?", null, [nodeName])) 
-            await this.exec('insert into RPL$USERS (LOGIN, CONFIG_NAME) values (?, ?)', null, [nodeName, this.configName]);
+        if (!await this.query("select login from CC$USERS where login = ?", null, [nodeName])) 
+            await this.exec('insert into CC$USERS (LOGIN, CONFIG_NAME) values (?, ?)', null, [nodeName, this.configName]);
         if (await this.inTransaction())
             await this.commit();
     }
@@ -134,10 +134,10 @@ export abstract class SQLDriver extends Driver {
     async getTransactionsToReplicate(destNode: string): Promise<number[]> {
         let transactions: number[] = [];
         //First get rid of previous replication cycles
-        await this.exec('delete from RPL$BLOCKS where node_name = ?', null, [destNode]);
+        await this.exec('delete from CC$BLOCKS where node_name = ?', null, [destNode]);
         await this.commit();
 
-        await this.query("select transaction_number, max(code) from RPL$LOG where login = ? " +
+        await this.query("select transaction_number, max(code) from CC$LOG where login = ? " +
         "group by transaction_number order by 2", null, [destNode],
         async (record) => {
             transactions.push(<number>record.fieldByName('transaction_number').value);
@@ -154,7 +154,7 @@ export abstract class SQLDriver extends Driver {
         //to false only if there are more than BLOCKSIZE records
         block.transactionFinished = true; 
         block.maxCode = -1;
-        await this.query('select * from rpl$log where transaction_number = ? and login = ? and code > ? order by code', 
+        await this.query('select * from CC$log where transaction_number = ? and login = ? and code > ? order by code', 
         null, [transaction_number, destNode, minCode],
         async (record: DB.Record): Promise<boolean> => {
             let rec = new ReplicationRecord();
@@ -184,7 +184,7 @@ export abstract class SQLDriver extends Driver {
 
     protected async getChangedFields(change_number: string, nodeName: string): Promise<DB.Field[]> {
         let fields: DB.Field[] = [];
-        await this.query("select * from RPL$LOG_VALUES where CHANGE_NUMBER = ? and node_name = ?", null, [change_number, nodeName],
+        await this.query("select * from CC$LOG_VALUES where CHANGE_NUMBER = ? and node_name = ?", null, [change_number, nodeName],
         async (record) => {
             let f: DB.Field = new DB.Field();
             f.fieldName = <string>record.fieldByName('field_name').value;
@@ -200,7 +200,7 @@ export abstract class SQLDriver extends Driver {
     }
 
     async validateBlock(transaction_number: number, maxCode: number, destNode: string): Promise<void>{
-        let sql = 'delete from RPL$LOG where transaction_number = ? and login = ?';
+        let sql = 'delete from CC$LOG where transaction_number = ? and login = ?';
         if (maxCode > -1)
             sql = sql + " and code <= ?";
         await this.exec(sql, null, [transaction_number, destNode, maxCode]);
@@ -305,13 +305,13 @@ export abstract class SQLDriver extends Driver {
         await this.startTransaction();
 
         try {
-            //Check if transactionID/blockID is in RPL$BLOCKS
+            //Check if transactionID/blockID is in CC$BLOCKS
             //If so, the block has already been replicated: do nothing
-            if (!await this.query("select code from RPL$BLOCKS where TR_NUMBER = ? and CODE = ? and NODE_NAME = ?", 
+            if (!await this.query("select code from CC$BLOCKS where TR_NUMBER = ? and CODE = ? and NODE_NAME = ?", 
                 null, [block.transactionID, block.maxCode, origNode])) 
             {          
-                //Insert blockID into RPL$TRANSACTIONS
-                await this.exec('insert into RPL$BLOCKS (TR_NUMBER, CODE, NODE_NAME) values (?, ?, ?)', null, 
+                //Insert blockID into CC$TRANSACTIONS
+                await this.exec('insert into CC$BLOCKS (TR_NUMBER, CODE, NODE_NAME) values (?, ?, ?)', null, 
                     [block.transactionID, block.maxCode, origNode]);                
 
                 //Initialize replicating node to avoid bouncing

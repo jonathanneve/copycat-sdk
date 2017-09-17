@@ -78,45 +78,46 @@ class RestClient extends Driver_1.Driver {
     doGet(url) {
         return __awaiter(this, void 0, void 0, function* () {
             let res = yield this.restClient.get(url, this.requestOptions);
-            return new Promise((resolve, reject) => {
-                if (res.statusCode != 200)
-                    reject('HTTP error ' + res.statusCode.toString());
-                else
-                    resolve(res.result);
-            });
+            if (res.result)
+                return res.result;
+            else
+                throw new Error('Resource not found! HTTP result:' + res.statusCode);
         });
     }
     doPut(url, obj) {
         return __awaiter(this, void 0, void 0, function* () {
             let res = yield this.restClient.replace(url, obj, this.requestOptions);
-            return new Promise((resolve, reject) => {
-                if (res.statusCode != 200)
+            return res.result;
+            /*return new Promise<T>((resolve, reject) => {
+                if (res.statusCode > 300)
                     reject('HTTP error ' + res.statusCode.toString());
                 else
                     resolve(res.result);
-            });
+            });*/
         });
     }
     doPost(url, obj) {
         return __awaiter(this, void 0, void 0, function* () {
             let res = yield this.restClient.create(url, obj, this.requestOptions);
-            return new Promise((resolve, reject) => {
-                if (res.statusCode != 200)
+            return res.result;
+            /*return new Promise<T>((resolve, reject) => {
+                if (res.statusCode > 200)
                     reject('HTTP error ' + res.statusCode.toString());
                 else
                     resolve(res.result);
-            });
+            });*/
         });
     }
     doDelete(url) {
         return __awaiter(this, void 0, void 0, function* () {
             let res = yield this.restClient.del(url, this.requestOptions);
-            return new Promise((resolve, reject) => {
+            return res.result;
+            /*return new Promise<T>((resolve, reject) => {
                 if (res.statusCode != 200)
                     reject('HTTP error ' + res.statusCode.toString());
                 else
                     resolve(res.result);
-            });
+            });*/
         });
     }
     initReplicationMetadata() {

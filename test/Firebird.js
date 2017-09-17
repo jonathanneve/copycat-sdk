@@ -27,7 +27,7 @@ class FirebirdDriver extends SQLDriver_1.SQLDriver {
     constructor() {
         super(fbDefs);
         this.tableDefs = {};
-        this.connectionParams = { database: '', username: '', password: '', role: '' };
+        this.connectionParams = { database: '', databaseVersion: '', username: '', password: '', role: '' };
         this.fbConnection = fb.createConnection();
     }
     //Connection
@@ -137,8 +137,12 @@ class FirebirdDriver extends SQLDriver_1.SQLDriver {
     }
     //This function converts the low-level Firebird datatypes (from rdb$fields) to DB.DataType
     convertDataType(sqlType, subType) {
-        if (sqlType == 7)
-            return DB.DataType.SmallInt;
+        if (sqlType == 7) {
+            if (subType == 1)
+                return DB.DataType.BCD;
+            else
+                return DB.DataType.SmallInt;
+        }
         else if (sqlType == 8)
             return DB.DataType.Integer;
         else if (sqlType == 9)
@@ -242,7 +246,7 @@ class FirebirdDriver extends SQLDriver_1.SQLDriver {
             catch (E) {
                 if (autoStartTR && (yield this.inTransaction()))
                     yield this.rollback();
-                throw E;
+                throw new Error('Error executing query: ' + sql + '\n' + E);
             }
         });
     }
@@ -272,18 +276,32 @@ class FirebirdDriver extends SQLDriver_1.SQLDriver {
             return maxCounter;
         });
     }
+    getTableCounter(tableName) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let counter = -1;
+            yield this.query("select counter from cc$tables where table_name = ?", null, [tableName], (rec) => __awaiter(this, void 0, void 0, function* () {
+                counter = rec.fieldByName('counter').value;
+            }));
+            return counter;
+        });
+    }
     getTriggerName(tableName, counter, trigger_number) {
         let counterStr = (10000 + counter).toString().substring(1);
-        return 'CC$' + tableName.substring(0, 22) + counterStr + "_" + trigger_number;
+        return 'CC$' + tableName.substring(0, 22) + counterStr + "_" + trigger_number.toString();
     }
     getDBVersion() {
-        return parseInt(this.databaseVersion.substring(2));
+        return parseInt(this.connectionParams.databaseVersion.substring(2));
     }
     getTriggerSQL(tableOptions, callback) {
         return __awaiter(this, void 0, void 0, function* () {
             let trigger_number = 1;
-            let counter = (yield this.getMaxTableCounter()) + 1;
-            for (let trig in this.dbDefinition.triggerTemplates) {
+            let triggersAlreadyCreated = true;
+            let counter = yield this.getTableCounter(tableOptions.tableName);
+            if (counter == -1) {
+                triggersAlreadyCreated = false;
+                counter = (yield this.getMaxTableCounter()) + 1;
+            }
+            for (let trig of this.dbDefinition.triggerTemplates) {
                 let trigName = this.getTriggerName(tableOptions.tableName, counter, trigger_number);
                 trig = trig.replace(/%TABLE_NAME%/g, tableOptions.tableName);
                 trig = trig.replace(/%TRIGGER_NAME%/g, trigName);
@@ -308,9 +326,12 @@ class FirebirdDriver extends SQLDriver_1.SQLDriver {
                     yield this.dropTriggers(tableOptions.tableName);
                     break;
                 }
+                trigger_number++;
             }
             ;
-            yield this.exec('insert into CC$TABLES (table_name, counter) values (?, ?, ?, ?)', null, [tableOptions.tableName, counter, tableOptions.includedFields.join(', '), tableOptions.excludedFields.join(', ')]);
+            if (!triggersAlreadyCreated) {
+                yield this.exec('insert into CC$TABLES (table_name, counter) values (?, ?)', null, [tableOptions.tableName, counter, tableOptions.includedFields.join(', '), tableOptions.excludedFields.join(', ')]);
+            }
         });
     }
     getTriggerNames(tableName) {
@@ -351,7 +372,7 @@ class FirebirdDriver extends SQLDriver_1.SQLDriver {
                 fieldType = 'integer';
                 break;
             case DB.DataType.BCD:
-                fieldType = 'numeric(' + field.length.toString() + ", " + field.precision + ")";
+                fieldType = 'numeric(' + field.precision.toString() + ", " + field.scale + ")";
                 break;
             case DB.DataType.Float:
                 fieldType = "double precision";
@@ -477,13 +498,19 @@ class FirebirdDriver extends SQLDriver_1.SQLDriver {
                 'join rdb$fields rfs on rfs.rdb$field_name = rf.rdb$field_source ' +
                 'where rf.rdb$relation_name = ?', null, [tableDef.tableName], (fieldRec) => __awaiter(this, void 0, void 0, function* () {
                 let fieldDef = new DB.FieldDefinition();
-                fieldDef.fieldName = fieldRec.fieldByName('rdb$field_name').value;
+                fieldDef.fieldName = fieldRec.fieldByName('rdb$field_name').value.trim();
                 if (fullFieldDefs) {
                     fieldDef.dataType = this.convertDataType(fieldRec.fieldByName('rdb$field_type').value, fieldRec.fieldByName('rdb$field_sub_type').value);
                     fieldDef.notNull = (fieldRec.fieldByName('rdb$null_flag').value == 1);
                     fieldDef.precision = fieldRec.fieldByName('rdb$field_precision').value;
-                    fieldDef.scale = fieldRec.fieldByName('rdb$field_scale').value;
-                    fieldDef.length = fieldRec.fieldByName('field_length').value;
+                    if (fieldDef.dataType == DB.DataType.BCD) {
+                        fieldDef.scale = -1 * fieldRec.fieldByName('rdb$field_scale').value;
+                        fieldDef.length = 0;
+                    }
+                    else {
+                        fieldDef.scale = fieldRec.fieldByName('rdb$field_scale').value;
+                        fieldDef.length = fieldRec.fieldByName('field_length').value;
+                    }
                     fieldDef.autoInc = false;
                 }
                 tableDef.fieldDefs.push(fieldDef);
@@ -497,7 +524,7 @@ class FirebirdDriver extends SQLDriver_1.SQLDriver {
         return __awaiter(this, void 0, void 0, function* () {
             let tableDefs = [];
             yield this.query("select rdb$relation_name from rdb$relations where rdb$system_flag = 0 and rdb$view_blr is null and not rdb$relation_name starting with 'CC$'", [], [], (tableRec) => __awaiter(this, void 0, void 0, function* () {
-                let tableDef = yield this.getTableDef(tableRec.fieldByName('rdb$relation_name').value, fullFieldDefs);
+                let tableDef = yield this.getTableDef(tableRec.fieldByName('rdb$relation_name').value.trim(), fullFieldDefs);
                 tableDefs.push(tableDef);
             }));
             return tableDefs;

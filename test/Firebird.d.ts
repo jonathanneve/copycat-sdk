@@ -7,6 +7,7 @@ export declare class FirebirdDriver extends SQLDriver {
     private tableDefs;
     connectionParams: {
         database: string;
+        databaseVersion: string;
         username: string;
         password: string;
         role: string;
@@ -31,6 +32,7 @@ export declare class FirebirdDriver extends SQLDriver {
     tableExists(tableName: string): Promise<boolean>;
     triggerExists(triggerName: string): Promise<boolean>;
     private getMaxTableCounter();
+    private getTableCounter(tableName);
     private getTriggerName(tableName, counter, trigger_number);
     getDBVersion(): number;
     getTriggerSQL(tableOptions: TableOptions, callback: (triggerName: string, sql: string) => Promise<boolean>): Promise<void>;

@@ -10,7 +10,7 @@ export declare class Replicator {
     tables: DB.TableDefinition[];
     constructor(localConf: ClientConfiguration);
     refreshConfig(): Promise<void>;
-    createLocalTriggers(localDB: SQLDriver, tableName: string): void;
+    createLocalTriggers(localDB: SQLDriver, tableName: string): Promise<void>;
     initializeLocalNode(): Promise<void>;
     replicate(): Promise<void>;
 }

@@ -22,8 +22,7 @@ export interface BlockCallback {
 
 export abstract class Driver implements IDriver {
     driverName: string;
-    configName: string;
-    databaseVersion: string;
+    configName: string;    
     connectionParams: any;
 
     static createFromJson(json: IDriver): Driver {
