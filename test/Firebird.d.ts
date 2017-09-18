@@ -1,4 +1,4 @@
-import { ReplicationRecord } from "../classes/Driver";
+import { DataRow } from "../classes/Driver";
 import * as DB from "../classes/DB";
 import { SQLDriver } from "../classes/SQLDriver";
 import { TableOptions } from "../interfaces/Nodes";
@@ -26,7 +26,7 @@ export declare class FirebirdDriver extends SQLDriver {
     convertAPIFieldType(sqlType: number): DB.DataType;
     getFieldType(sqlType: number): DB.DataType;
     private convertDataType(sqlType, subType);
-    checkRowExists(record: ReplicationRecord): Promise<boolean>;
+    checkRowExists(record: DataRow): Promise<boolean>;
     executeSQL(sql: string, autocreateTR: boolean, fetchResultSet: boolean, callback?: (record: DB.Record) => Promise<boolean | void>, params?: Object[]): Promise<boolean>;
     dropTable(tableName: string): Promise<void>;
     tableExists(tableName: string): Promise<boolean>;
@@ -45,7 +45,7 @@ export declare class FirebirdDriver extends SQLDriver {
     customMetadataExists(objectName: string, objectType: string): Promise<boolean>;
     createCustomMetadata(metadata: DB.CustomMetadataDefinition): Promise<void>;
     setReplicatingNode(origNode: string): Promise<void>;
-    private listPrimaryKeyFields(tableName);
+    listPrimaryKeyFields(tableName: string): Promise<string[]>;
     private getTableDef(tableName, fullFieldDefs);
     listTables(fullFieldDefs: boolean): Promise<DB.TableDefinition[]>;
 }

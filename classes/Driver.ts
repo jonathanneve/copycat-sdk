@@ -1,19 +1,19 @@
 import * as DB from "./DB"
 import {IDriver} from '../interfaces/Driver'
 
-export class ReplicationRecord {
+export class DataRow {
     code: number;
     tableName: string;
     primaryKeys: DB.Field[];
     operationType: string;
-    changedFields: DB.Field[] = [];
+    fields: DB.Field[] = [];
 }
 
 export class ReplicationBlock {
     transactionID: number;
     maxCode: number;
     transactionFinished: boolean;
-    records: ReplicationRecord[] = [];
+    records: DataRow[] = [];
 }
 
 export interface BlockCallback {
@@ -49,6 +49,9 @@ export abstract class Driver implements IDriver {
 
     abstract listTables(fullFieldDefs: boolean): Promise<DB.TableDefinition[]>;
     abstract createOrUpdateTable(table: DB.TableDefinition): Promise<void>;    
+
+    abstract getDataRows(tableName: string): Promise<DataRow[]>;
+    abstract importTableData(tableName: string, records: DataRow[]): Promise<void>;
 
     /*customMetadataExists(objectName: string, objectType: string): boolean;
     createCustomMetadata(metadata: DB.CustomMetadataDefinition): void;*/

@@ -1,4 +1,4 @@
-import {Driver, ReplicationBlock, ReplicationRecord, addDriver} from "../Driver"
+import {Driver, ReplicationBlock, DataRow, addDriver} from "../Driver"
 import {SQLDriver} from '../SQLDriver'
 import {Node} from "../../interfaces/Nodes"
 import * as DB from "../DB"
@@ -13,6 +13,13 @@ interface ITransactionList {
 } 
 
 export class RestClient extends Driver {
+
+    async getDataRows(tableName: string): Promise<DataRow[]> {
+        return await this.doGet<DataRow[]>(this.baseURL + '/api/v1/node/table/' + tableName + "/data");
+    }
+    async importTableData(tableName: string, records: DataRow[]) {
+        await this.doPut<DataRow[]>(this.baseURL + '/api/v1/node/table/' + tableName + "/data", records);
+    }
 
     private httpClient: http.HttpClient;
     private restClient: rest.RestClient;

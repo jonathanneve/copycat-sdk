@@ -1,5 +1,5 @@
 import * as DB from './DB'
-import {Driver, ReplicationBlock, ReplicationRecord} from './Driver'
+import {Driver, ReplicationBlock, DataRow} from './Driver'
 import {TableOptions} from '../interfaces/Nodes'
 
 const RPLTableDefs: DB.TableDefinition[] = require("../data/rpltables.json")
@@ -82,6 +82,7 @@ export abstract class SQLDriver extends Driver {
     protected abstract dropTable(tableName: string): Promise<void>;
     protected abstract tableExists(tableName: string): Promise<boolean>;    
     abstract createTable(table: DB.TableDefinition): Promise<void>;
+    abstract listPrimaryKeyFields(tableName: string): Promise<string[]>;
 //    abstract updateTable(table: DB.TableDefinition): Promise<void>;
     
     //Replication meta-data
@@ -147,6 +148,22 @@ export abstract class SQLDriver extends Driver {
         return transactions;
     }
 
+    async getDataRows(tableName: string): Promise<DataRow[]>{
+        let pkFields = await this.listPrimaryKeyFields(tableName);    
+        let records: DataRow[] = [];
+        await this.query('select * from ' + tableName, null, null,
+            async (record: DB.Record) => {
+                let rec = new DataRow();
+                let pkValues = pkFields.map(f => record.fieldByName(f).value);
+
+                rec.tableName = tableName;
+                rec.primaryKeys = await this.prepareKeyValues(rec.tableName, pkFields, [], pkValues);
+                rec.fields = record.fields.slice();
+                records.push(rec);
+            });
+        return records;
+    }
+
     async getRowsToReplicate(destNode: string, transaction_number: number, minCode?: number): Promise<ReplicationBlock>{
         if (!minCode)
           minCode = -1;
@@ -159,15 +176,15 @@ export abstract class SQLDriver extends Driver {
         await this.query('select * from CC$log where transaction_number = ? and login = ? and code > ? order by code', 
         null, [transaction_number, destNode, minCode],
         async (record: DB.Record): Promise<boolean> => {
-            let rec = new ReplicationRecord();
+            let rec = new DataRow();
             let pkFields = this.parseKeys(<string>record.fieldByName('primary_key_fields').value);
             let pkValues = this.parseKeys(<string>record.fieldByName('primary_key_values').value);
 
             rec.code = <number>record.fieldByName('code').value;
             rec.tableName = <string>record.fieldByName('table_name').value;
-            rec.primaryKeys = await this.parseKeyValues(rec.tableName, pkFields, pkValues);
+            rec.primaryKeys = await this.prepareKeyValues(rec.tableName, pkFields, pkValues);
             rec.operationType = <string>record.fieldByName('operation_type').value;
-            rec.changedFields = await this.getChangedFields(<string>record.fieldByName('change_number').value, <string>record.fieldByName('login').value);
+            rec.fields = await this.getChangedFields(<string>record.fieldByName('change_number').value, <string>record.fieldByName('login').value);
             block.records.push(rec);
             if (block.records.length >= BLOCKSIZE) {
                 block.maxCode = <number>record.fieldByName('code').value;         
@@ -211,21 +228,21 @@ export abstract class SQLDriver extends Driver {
 
     //REMOTE TO LOCAL
     protected abstract setReplicatingNode(origNode: string): Promise<void>;
-    protected abstract checkRowExists(record: ReplicationRecord): Promise<boolean>;
+    protected abstract checkRowExists(record: DataRow): Promise<boolean>;
     protected abstract getDataTypesOfFields(tableName: string, keyName: string[]): Promise<DB.DataType[]>;
     protected abstract parseFieldValue(dataType: DB.DataType, fieldValue: string): Promise<Object>;    
 
-    protected getSQLStatement(record: ReplicationRecord): string {
+    protected getSQLStatement(record: DataRow): string {
         if (record.operationType == "I") {
             return 'insert into "' + record.tableName.toLowerCase() + '" ( ' +
-                record.changedFields.map<string>(f => '"' + f.fieldName.toLowerCase() + '"').join(', ') +
+                record.fields.map<string>(f => '"' + f.fieldName.toLowerCase() + '"').join(', ') +
                 ' ) values (' +
-                record.changedFields.map<string>(f => ':"' + f.fieldName.toLowerCase() + '"').join(', ') +
+                record.fields.map<string>(f => ':"' + f.fieldName.toLowerCase() + '"').join(', ') +
                 ')';                
         }
         else if (record.operationType == "U") {
             return 'update "' + record.tableName.toLowerCase() + '" set ' +
-                record.changedFields.map<string>(f => '"' + f.fieldName.toLowerCase() + '" = :"' + f.fieldName.toLowerCase() + '"').join(', ') +
+                record.fields.map<string>(f => '"' + f.fieldName.toLowerCase() + '" = :"' + f.fieldName.toLowerCase() + '"').join(', ') +
                 this.getWhereClause(record);               
         }
         else if (record.operationType == "D") {
@@ -279,7 +296,7 @@ export abstract class SQLDriver extends Driver {
         return result;
     }
 
-    private async parseKeyValues(tableName: string, keyNames: string[], keyValues: string[]): Promise<DB.Field[]> {        
+    private async prepareKeyValues(tableName: string, keyNames: string[], keyValues: string[], keyValueObjects?: Object[]): Promise<DB.Field[]> {        
         let result: DB.Field[] = [];
         let keyTypes: DB.DataType[] = await this.getDataTypesOfFields(tableName, keyNames);
         for (let keyName of keyNames){
@@ -287,17 +304,43 @@ export abstract class SQLDriver extends Driver {
             let index = keyNames.indexOf(keyName);
             f.fieldName = keyName;
             f.dataType = keyTypes[index];
-            f.value = await this.parseFieldValue(f.dataType, keyValues[index]);           
+            if (keyValueObjects)
+                f.value = keyValueObjects[index];      
+            else
+                f.value = await this.parseFieldValue(f.dataType, keyValues[index]);           
             result.push(f);
         }
         return result;
     }
 
-    protected getWhereClause(record: ReplicationRecord): string {
+    protected getWhereClause(record: DataRow): string {
         return ' where ' + record.primaryKeys.map<string>(f => '"' + f.fieldName.toLowerCase() + '" = ?').join(' and ');
     }
-    protected getWhereFieldValues(record: ReplicationRecord): Object[]{
+    protected getWhereFieldValues(record: DataRow): Object[]{
         return record.primaryKeys.map(f => f.value);    
+    }
+
+    public async importTableData(tableName: string, records: DataRow[]): Promise<void> {
+        if (!await this.isConnected())
+        await this.connect();
+        await this.startTransaction();
+
+        try {           
+            for (let record of records) {
+                let rowExists = await this.checkRowExists(record);
+                if (rowExists)
+                    record.operationType = "U"
+                else
+                    record.operationType = "I";    
+                let sql = this.getSQLStatement(record);
+                await this.exec(sql, record.fields, this.getWhereFieldValues(record));
+            };
+            await this.commit();
+        }
+        catch (E) {
+            await this.rollback();
+            throw E;
+        }
     }
 
     async replicateBlock(origNode: string, block: ReplicationBlock):Promise<void>  {
@@ -329,7 +372,7 @@ export abstract class SQLDriver extends Driver {
                         throw new Error(`Row to be inserted already exists: Table: ${record.tableName} Keys: [${keyValues}]!`);
                     
                     let sql = this.getSQLStatement(record);
-                    await this.exec(sql, record.changedFields, this.getWhereFieldValues(record));
+                    await this.exec(sql, record.fields, this.getWhereFieldValues(record));
                 };
             }            
             //Commit or rollback if error

@@ -1,5 +1,5 @@
 import * as DB from './DB';
-import { Driver, ReplicationBlock, ReplicationRecord } from './Driver';
+import { Driver, ReplicationBlock, DataRow } from './Driver';
 import { TableOptions } from '../interfaces/Nodes';
 export declare abstract class SQLDriver extends Driver {
     protected dbDefinition: DB.DatabaseDefinition;
@@ -18,6 +18,7 @@ export declare abstract class SQLDriver extends Driver {
     protected abstract dropTable(tableName: string): Promise<void>;
     protected abstract tableExists(tableName: string): Promise<boolean>;
     abstract createTable(table: DB.TableDefinition): Promise<void>;
+    abstract listPrimaryKeyFields(tableName: string): Promise<string[]>;
     protected abstract customMetadataExists(objectName: string, objectType: string): Promise<boolean>;
     protected abstract createCustomMetadata(metadata: DB.CustomMetadataDefinition): Promise<void>;
     addNode(nodeName: string): Promise<void>;
@@ -29,18 +30,20 @@ export declare abstract class SQLDriver extends Driver {
     abstract dropTriggers(tableName: string): Promise<void>;
     createTriggers(tableOptions: TableOptions): Promise<void>;
     getTransactionsToReplicate(destNode: string): Promise<number[]>;
+    getDataRows(tableName: string): Promise<DataRow[]>;
     getRowsToReplicate(destNode: string, transaction_number: number, minCode?: number): Promise<ReplicationBlock>;
     protected abstract getFieldType(sqlType: number): DB.DataType;
     protected getChangedFields(change_number: string, nodeName: string): Promise<DB.Field[]>;
     validateBlock(transaction_number: number, maxCode: number, destNode: string): Promise<void>;
     protected abstract setReplicatingNode(origNode: string): Promise<void>;
-    protected abstract checkRowExists(record: ReplicationRecord): Promise<boolean>;
+    protected abstract checkRowExists(record: DataRow): Promise<boolean>;
     protected abstract getDataTypesOfFields(tableName: string, keyName: string[]): Promise<DB.DataType[]>;
     protected abstract parseFieldValue(dataType: DB.DataType, fieldValue: string): Promise<Object>;
-    protected getSQLStatement(record: ReplicationRecord): string;
+    protected getSQLStatement(record: DataRow): string;
     private parseKeys(keys);
-    private parseKeyValues(tableName, keyNames, keyValues);
-    protected getWhereClause(record: ReplicationRecord): string;
-    protected getWhereFieldValues(record: ReplicationRecord): Object[];
+    private prepareKeyValues(tableName, keyNames, keyValues, keyValueObjects?);
+    protected getWhereClause(record: DataRow): string;
+    protected getWhereFieldValues(record: DataRow): Object[];
+    importTableData(tableName: string, records: DataRow[]): Promise<void>;
     replicateBlock(origNode: string, block: ReplicationBlock): Promise<void>;
 }

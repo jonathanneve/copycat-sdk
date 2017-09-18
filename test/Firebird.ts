@@ -1,4 +1,4 @@
-import {drivers, Driver, ReplicationBlock, ReplicationRecord, addDriver} from "../classes/Driver"
+import {drivers, Driver, ReplicationBlock, DataRow, addDriver} from "../classes/Driver"
 import * as DB from  "../classes/DB"
 import {SQLDriver} from  "../classes/SQLDriver"
 import {Stream} from "stream"
@@ -187,7 +187,7 @@ export class FirebirdDriver extends SQLDriver {
             return DB.DataType.Boolean;
     }
 
-    async checkRowExists(record: ReplicationRecord): Promise<boolean> {
+    async checkRowExists(record: DataRow): Promise<boolean> {
         return await this.query('select * from ' + record.tableName + this.getWhereClause(record), null, this.getWhereFieldValues(record));
     }
 
@@ -453,7 +453,7 @@ export class FirebirdDriver extends SQLDriver {
         await this.exec("select rdb$set_context('USER_SESSION', 'REPLICATING_NODE', 'TRUE') from rdb$database");
     }
 
-    private async listPrimaryKeyFields(tableName: string): Promise<string[]>{
+    async listPrimaryKeyFields(tableName: string): Promise<string[]>{
         let keys: string[] = [];
         await this.query(
             'select i.rdb$field_name as pk_name ' +

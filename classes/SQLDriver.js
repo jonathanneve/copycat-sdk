@@ -123,6 +123,21 @@ class SQLDriver extends Driver_1.Driver {
             return transactions;
         });
     }
+    getDataRows(tableName) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let pkFields = yield this.listPrimaryKeyFields(tableName);
+            let records = [];
+            yield this.query('select * from ' + tableName, null, null, (record) => __awaiter(this, void 0, void 0, function* () {
+                let rec = new Driver_1.DataRow();
+                let pkValues = pkFields.map(f => record.fieldByName(f).value);
+                rec.tableName = tableName;
+                rec.primaryKeys = yield this.prepareKeyValues(rec.tableName, pkFields, [], pkValues);
+                rec.fields = record.fields.slice();
+                records.push(rec);
+            }));
+            return records;
+        });
+    }
     getRowsToReplicate(destNode, transaction_number, minCode) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!minCode)
@@ -133,14 +148,14 @@ class SQLDriver extends Driver_1.Driver {
             block.transactionFinished = true;
             block.maxCode = -1;
             yield this.query('select * from CC$log where transaction_number = ? and login = ? and code > ? order by code', null, [transaction_number, destNode, minCode], (record) => __awaiter(this, void 0, void 0, function* () {
-                let rec = new Driver_1.ReplicationRecord();
+                let rec = new Driver_1.DataRow();
                 let pkFields = this.parseKeys(record.fieldByName('primary_key_fields').value);
                 let pkValues = this.parseKeys(record.fieldByName('primary_key_values').value);
                 rec.code = record.fieldByName('code').value;
                 rec.tableName = record.fieldByName('table_name').value;
-                rec.primaryKeys = yield this.parseKeyValues(rec.tableName, pkFields, pkValues);
+                rec.primaryKeys = yield this.prepareKeyValues(rec.tableName, pkFields, pkValues);
                 rec.operationType = record.fieldByName('operation_type').value;
-                rec.changedFields = yield this.getChangedFields(record.fieldByName('change_number').value, record.fieldByName('login').value);
+                rec.fields = yield this.getChangedFields(record.fieldByName('change_number').value, record.fieldByName('login').value);
                 block.records.push(rec);
                 if (block.records.length >= BLOCKSIZE) {
                     block.maxCode = record.fieldByName('code').value;
@@ -183,14 +198,14 @@ class SQLDriver extends Driver_1.Driver {
     getSQLStatement(record) {
         if (record.operationType == "I") {
             return 'insert into "' + record.tableName.toLowerCase() + '" ( ' +
-                record.changedFields.map(f => '"' + f.fieldName.toLowerCase() + '"').join(', ') +
+                record.fields.map(f => '"' + f.fieldName.toLowerCase() + '"').join(', ') +
                 ' ) values (' +
-                record.changedFields.map(f => ':"' + f.fieldName.toLowerCase() + '"').join(', ') +
+                record.fields.map(f => ':"' + f.fieldName.toLowerCase() + '"').join(', ') +
                 ')';
         }
         else if (record.operationType == "U") {
             return 'update "' + record.tableName.toLowerCase() + '" set ' +
-                record.changedFields.map(f => '"' + f.fieldName.toLowerCase() + '" = :"' + f.fieldName.toLowerCase() + '"').join(', ') +
+                record.fields.map(f => '"' + f.fieldName.toLowerCase() + '" = :"' + f.fieldName.toLowerCase() + '"').join(', ') +
                 this.getWhereClause(record);
         }
         else if (record.operationType == "D") {
@@ -239,7 +254,7 @@ class SQLDriver extends Driver_1.Driver {
             endExpression();
         return result;
     }
-    parseKeyValues(tableName, keyNames, keyValues) {
+    prepareKeyValues(tableName, keyNames, keyValues, keyValueObjects) {
         return __awaiter(this, void 0, void 0, function* () {
             let result = [];
             let keyTypes = yield this.getDataTypesOfFields(tableName, keyNames);
@@ -248,7 +263,10 @@ class SQLDriver extends Driver_1.Driver {
                 let index = keyNames.indexOf(keyName);
                 f.fieldName = keyName;
                 f.dataType = keyTypes[index];
-                f.value = yield this.parseFieldValue(f.dataType, keyValues[index]);
+                if (keyValueObjects)
+                    f.value = keyValueObjects[index];
+                else
+                    f.value = yield this.parseFieldValue(f.dataType, keyValues[index]);
                 result.push(f);
             }
             return result;
@@ -259,6 +277,30 @@ class SQLDriver extends Driver_1.Driver {
     }
     getWhereFieldValues(record) {
         return record.primaryKeys.map(f => f.value);
+    }
+    importTableData(tableName, records) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!(yield this.isConnected()))
+                yield this.connect();
+            yield this.startTransaction();
+            try {
+                for (let record of records) {
+                    let rowExists = yield this.checkRowExists(record);
+                    if (rowExists)
+                        record.operationType = "U";
+                    else
+                        record.operationType = "I";
+                    let sql = this.getSQLStatement(record);
+                    yield this.exec(sql, record.fields, this.getWhereFieldValues(record));
+                }
+                ;
+                yield this.commit();
+            }
+            catch (E) {
+                yield this.rollback();
+                throw E;
+            }
+        });
     }
     replicateBlock(origNode, block) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -283,7 +325,7 @@ class SQLDriver extends Driver_1.Driver {
                         else if (rowExists && (record.operationType == "I"))
                             throw new Error(`Row to be inserted already exists: Table: ${record.tableName} Keys: [${keyValues}]!`);
                         let sql = this.getSQLStatement(record);
-                        yield this.exec(sql, record.changedFields, this.getWhereFieldValues(record));
+                        yield this.exec(sql, record.fields, this.getWhereFieldValues(record));
                     }
                     ;
                 }

@@ -27,6 +27,16 @@ class RestClient extends Driver_1.Driver {
             }
         };
     }
+    getDataRows(tableName) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.doGet(this.baseURL + '/api/v1/node/table/' + tableName + "/data");
+        });
+    }
+    importTableData(tableName, records) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.doPut(this.baseURL + '/api/v1/node/table/' + tableName + "/data", records);
+        });
+    }
     createOrUpdateTable(table) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.doPut(this.baseURL + '/api/v1/node/table/' + table.tableName, table);

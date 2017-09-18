@@ -1,17 +1,17 @@
 import * as DB from "./DB";
 import { IDriver } from '../interfaces/Driver';
-export declare class ReplicationRecord {
+export declare class DataRow {
     code: number;
     tableName: string;
     primaryKeys: DB.Field[];
     operationType: string;
-    changedFields: DB.Field[];
+    fields: DB.Field[];
 }
 export declare class ReplicationBlock {
     transactionID: number;
     maxCode: number;
     transactionFinished: boolean;
-    records: ReplicationRecord[];
+    records: DataRow[];
 }
 export interface BlockCallback {
     (block: ReplicationBlock): boolean;
@@ -29,6 +29,8 @@ export declare abstract class Driver implements IDriver {
     abstract clearReplicationMetadata(): Promise<void>;
     abstract listTables(fullFieldDefs: boolean): Promise<DB.TableDefinition[]>;
     abstract createOrUpdateTable(table: DB.TableDefinition): Promise<void>;
+    abstract getDataRows(tableName: string): Promise<DataRow[]>;
+    abstract importTableData(tableName: string, records: DataRow[]): Promise<void>;
 }
 export declare var drivers: {
     [id: string]: typeof Driver;

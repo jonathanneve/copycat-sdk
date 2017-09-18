@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-class ReplicationRecord {
+class DataRow {
     constructor() {
-        this.changedFields = [];
+        this.fields = [];
     }
 }
-exports.ReplicationRecord = ReplicationRecord;
+exports.DataRow = DataRow;
 class ReplicationBlock {
     constructor() {
         this.records = [];

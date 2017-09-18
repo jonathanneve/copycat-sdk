@@ -31,6 +31,12 @@ class Replicator {
             yield localDB.createTriggers(tableOptions);
         });
     }
+    pumpTableToCloud(table) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let rows = yield this.localConfig.localDatabase.getDataRows(table.tableName);
+            yield this.cloudConnection.importTableData(table.tableName, rows);
+        });
+    }
     initializeLocalNode() {
         return __awaiter(this, void 0, void 0, function* () {
             console.log('getting node info');
@@ -73,7 +79,7 @@ class Replicator {
                             //      3. Upload existing data from local DB
                             yield this.cloudConnection.createTable(localTable);
                             yield this.createLocalTriggers(localDB, localTable.tableName);
-                            //TODO: import existing data
+                            //await this.pumpTableToCloud(localTable);
                         }
                     }
                     else {

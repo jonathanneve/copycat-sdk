@@ -1,5 +1,5 @@
 import * as DB from "./DB"
-import {Driver, ReplicationBlock} from "./Driver"
+import { Driver, ReplicationBlock, DataRow } from "./Driver"
 import {Configuration} from '../interfaces/Config';
 import {Node} from '../interfaces/Nodes'
 import {ClientConfiguration} from '../interfaces/ClientConfig'
@@ -32,6 +32,11 @@ export class Replicator {
             tableOptions = {tableName: tableName, excludedFields: [], includedFields: [] }
         
         await localDB.createTriggers(tableOptions);      
+    }
+
+    async pumpTableToCloud(table: DB.TableDefinition): Promise<void>{
+        let rows = await this.localConfig.localDatabase.getDataRows(table.tableName);
+        await this.cloudConnection.importTableData(table.tableName, rows);
     }
 
     async initializeLocalNode(): Promise<void> {
@@ -81,8 +86,7 @@ export class Replicator {
                         //      3. Upload existing data from local DB
                         await this.cloudConnection.createTable(localTable);
                         await this.createLocalTriggers(localDB, localTable.tableName);
-                        
-                        //TODO: import existing data
+                        //await this.pumpTableToCloud(localTable);
                     }
                 }
                 else {
