@@ -7,8 +7,8 @@ import { ClientConfiguration } from '../interfaces/ClientConfig'
 import fs = require('fs');
 
 let jsonConf = JSON.parse(fs.readFileSync(__dirname + "/config.json", 'utf8'));
-let fbconn = Object.assign(new FB.FirebirdDriver(), jsonConf.localDatabase);
-let conf = ClientConfiguration.createFromJson(jsonConf, fbconn);
+/*let fbconn = Object.assign(new FB.FirebirdDriver(), jsonConf.localDatabase);
+let conf = ClientConfiguration.createFromJson(jsonConf, fbconn);*/
 
 //import '../Drivers/Firebird.js'
 /*
@@ -57,8 +57,61 @@ const configMgr = new mockConfigMgr();
 configMgr.configName = "TST";
 */
 
+async function runReplication(init: boolean) {
+    try {
+        console.log('Running replication' + (init ? ": first run..." : "..."));
+        
+        let fbconn = Object.assign(new FB.FirebirdDriver(), jsonConf.localDatabase);
+        let conf = ClientConfiguration.createFromJson(jsonConf, fbconn);
+        let repl = new Replicator(conf);
+        if (init) {
+            /*    let fbconn = Object.assign(new FB.FirebirdDriver(), jsonConf.localDatabase);
+                let conf = ClientConfiguration.createFromJson(jsonConf, fbconn);
+                let repl = new Replicator(conf);*/
+
+/*            console.log('Initializing local node...');
+            await repl.initializeLocalNode();*/
+            
+            console.log('Getting config...');
+            await repl.refreshConfig();
+
+            console.log('Getting config...');
+            await repl.refreshConfig();
+
+            console.log('Getting config...');
+            await repl.refreshConfig();
+
+            console.log('Initializing cloud node...');
+            await repl.initializeCloudDatabase();
+
+            console.log('Getting config...');
+            await repl.refreshConfig();
+
+            console.log('Initializing cloud node again...');
+            await repl.initializeCloudDatabase();
+
+            console.log('Getting config...');
+            await repl.refreshConfig();
+        }
+        
+        console.log('Replicating...');
+        await repl.replicate();
+
+        console.log('Done!');
+
+        setTimeout(runReplication, 5000, false);
+    }
+    catch (err) {
+        console.log(err);
+    }
+}
+
+setTimeout(runReplication, 0, true);
+
+
+
+
 //let conf = ClientConfiguration.createFromJson(__dirname + "/config.json", null);
-const repl = new Replicator(conf);
 //repl.initializeLocalNode()
 //.then(() => {
     //console.log(repl.nodeConfig);
@@ -69,12 +122,19 @@ const repl = new Replicator(conf);
     console.log("cloud initialization done, replicating...");
     return repl.replicate()
 })*/
-repl.replicate().then(() => {
+
+/*
+const repl = new Replicator(conf);
+repl.initializeCloudDatabase().then(() => {
     console.log("replication done");
 })
 .catch(err => {
-    console.log("Error : " + err.message);
-});    
+    console.log("Error : " + err);
+});
+*/
+
+
+
 /*})
 .catch((reason:any)=> {
     console.log("Error initializing: " + reason.message);

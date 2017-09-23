@@ -12,6 +12,10 @@ interface ITransactionList {
     transactions: number[];
 } 
 
+interface EmptyRequest {
+
+}
+
 export class RestClient extends Driver {
 
     async getDataRows(tableName: string): Promise<DataRow[]> {
@@ -101,6 +105,12 @@ export class RestClient extends Driver {
         });*/
     }
 
+    private async doPostEmpty(url: string): Promise<void> {
+        let res = await this.httpClient.post(url, '', this.requestOptions.additionalHeaders);
+        if (res.message.statusCode > 299)
+            throw new Error(url + ': post failed with HTTP code ' + res.message.statusCode.toString());    
+    }
+
     private async doDelete<T>(url: string): Promise<T>{
         let res = await this.restClient.del<T>(url, this.requestOptions);                      
         return res.result;
@@ -113,9 +123,13 @@ export class RestClient extends Driver {
     }
 
     async initReplicationMetadata(): Promise<void> {
-        await this.httpClient.post(this.baseURL + '/api/v1/node/init_repl', '', this.requestOptions)
-        //await this.doPost<Object>(this.baseURL + '/api/v1/node/init_repl', {});
+        //await this.restClient.create(this.baseURL + '/api/v1/node/init_repl', '', this.requestOptions)
+        // doPost<string>(this.baseURL + '/api/v1/node/init_repl', '');   
+        let res = await this.httpClient.post(this.baseURL + '/api/v1/node/init_repl', '', this.requestOptions.additionalHeaders);
+        if (res.message.statusCode > 299)
+            throw new Error('initReplicationMetadata failed with HTTP code ' + res.message.statusCode.toString());    
     }
+
     async clearReplicationMetadata(): Promise<void> {
         throw new Error('Method not implemented.');
     }

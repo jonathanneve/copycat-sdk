@@ -47,7 +47,7 @@ begin
   and %EXCLUDED_FIELDS%
   into :field_name, :field_length, :field_type do
   begin
-      if (field_length <= 250 and field_type not in (15, 16, 39)) then
+      if (field_length <= 250 and field_type not in (3, 4)) then
         current_stmt = 'select '''|| :field_name || ''',cast(' || :field_name || ' as varchar(250)), cast(null as blob),' || :field_type || ' from %TABLE_NAME% where %DBKEY%';
       else
         current_stmt = 'select '''|| :field_name || ''',cast(null as varchar(250)),cast(' || :field_name || ' as blob),' || :field_type || ' from %TABLE_NAME% where %DBKEY%';

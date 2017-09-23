@@ -1,12 +1,20 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const Replicator_1 = require("../classes/Replicator");
 const FB = require("./Firebird");
 const ClientConfig_1 = require("../interfaces/ClientConfig");
 const fs = require("fs");
 let jsonConf = JSON.parse(fs.readFileSync(__dirname + "/config.json", 'utf8'));
-let fbconn = Object.assign(new FB.FirebirdDriver(), jsonConf.localDatabase);
-let conf = ClientConfig_1.ClientConfiguration.createFromJson(jsonConf, fbconn);
+/*let fbconn = Object.assign(new FB.FirebirdDriver(), jsonConf.localDatabase);
+let conf = ClientConfiguration.createFromJson(jsonConf, fbconn);*/
 //import '../Drivers/Firebird.js'
 /*
 const source: FirebirdDriver = new FirebirdDriver();
@@ -51,8 +59,46 @@ dest.configName = "TST";*/
 const configMgr = new mockConfigMgr();
 configMgr.configName = "TST";
 */
+function runReplication(init) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            console.log('Running replication' + (init ? ": first run..." : "..."));
+            let fbconn = Object.assign(new FB.FirebirdDriver(), jsonConf.localDatabase);
+            let conf = ClientConfig_1.ClientConfiguration.createFromJson(jsonConf, fbconn);
+            let repl = new Replicator_1.Replicator(conf);
+            if (init) {
+                /*    let fbconn = Object.assign(new FB.FirebirdDriver(), jsonConf.localDatabase);
+                    let conf = ClientConfiguration.createFromJson(jsonConf, fbconn);
+                    let repl = new Replicator(conf);*/
+                /*            console.log('Initializing local node...');
+                            await repl.initializeLocalNode();*/
+                console.log('Getting config...');
+                yield repl.refreshConfig();
+                console.log('Getting config...');
+                yield repl.refreshConfig();
+                console.log('Getting config...');
+                yield repl.refreshConfig();
+                console.log('Initializing cloud node...');
+                yield repl.initializeCloudDatabase();
+                console.log('Getting config...');
+                yield repl.refreshConfig();
+                console.log('Initializing cloud node again...');
+                yield repl.initializeCloudDatabase();
+                console.log('Getting config...');
+                yield repl.refreshConfig();
+            }
+            console.log('Replicating...');
+            yield repl.replicate();
+            console.log('Done!');
+            setTimeout(runReplication, 5000, false);
+        }
+        catch (err) {
+            console.log(err);
+        }
+    });
+}
+setTimeout(runReplication, 0, true);
 //let conf = ClientConfiguration.createFromJson(__dirname + "/config.json", null);
-const repl = new Replicator_1.Replicator(conf);
 //repl.initializeLocalNode()
 //.then(() => {
 //console.log(repl.nodeConfig);
@@ -63,12 +109,15 @@ const repl = new Replicator_1.Replicator(conf);
     console.log("cloud initialization done, replicating...");
     return repl.replicate()
 })*/
-repl.replicate().then(() => {
+/*
+const repl = new Replicator(conf);
+repl.initializeCloudDatabase().then(() => {
     console.log("replication done");
 })
-    .catch(err => {
-    console.log("Error : " + err.message);
+.catch(err => {
+    console.log("Error : " + err);
 });
+*/
 /*})
 .catch((reason:any)=> {
     console.log("Error initializing: " + reason.message);

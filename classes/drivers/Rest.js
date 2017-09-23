@@ -132,8 +132,11 @@ class RestClient extends Driver_1.Driver {
     }
     initReplicationMetadata() {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.httpClient.post(this.baseURL + '/api/v1/node/init_repl', '', this.requestOptions);
-            //await this.doPost<Object>(this.baseURL + '/api/v1/node/init_repl', {});
+            //await this.restClient.create(this.baseURL + '/api/v1/node/init_repl', '', this.requestOptions)
+            // doPost<string>(this.baseURL + '/api/v1/node/init_repl', '');   
+            let res = yield this.httpClient.post(this.baseURL + '/api/v1/node/init_repl', '', this.requestOptions.additionalHeaders);
+            if (res.message.statusCode > 299)
+                throw new Error('initReplicationMetadata failed with HTTP code ' + res.message.statusCode.toString());
         });
     }
     clearReplicationMetadata() {

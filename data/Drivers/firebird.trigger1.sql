@@ -22,15 +22,15 @@ begin
     dbkey = new.rdb$db_key;
   counter = 0;
   for select trim(rf.rdb$field_name), coalesce(f.rdb$character_length, f.rdb$field_length), case f.rdb$field_type
-    when 7 then 3 when 8 then 3 when 9 then 3
-    when 10 then 6 when 27 then 6 when 12 then 9
-    when 13 then 10
-    when 35 then 11
-    when 14 then iif(rdb$character_set_id = 4, 38, 23)
-    when 37 then iif(rdb$character_set_id = 4, 24, 1)
-    when 40 then iif(rdb$character_set_id = 4, 24, 1)
-    when 261 then iif(rdb$field_sub_type = 0, 15, iif(rdb$character_set_id = 4, 39, 16))
-    when 16 then 8
+    when 7 then 6 when 8 then 7 when 9 then 0
+    when 10 then 11 when 27 then 11 when 12 then 13
+    when 13 then 14
+    when 35 then 12
+    when 14 then 2 
+    when 37 then 1
+    when 40 then 1
+    when 261 then iif(rdb$field_sub_type = 0, 4, 3)
+    when 16 then iif(rdb$field_sub_type = 0, 8, 10)
     when 23 then 5
   end
   from rdb$relation_fields rf
@@ -40,7 +40,7 @@ begin
   and %EXCLUDED_FIELDS%
   into :field_name, :field_length, :field_type do
   begin
-      if (field_length <= 250 and field_type not in (15, 16, 39)) then
+      if (field_length <= 250 and field_type not in (3, 4)) then
         current_stmt = 'select '''|| :field_name || ''',cast(' || :field_name || ' as varchar(250)), cast(null as blob),' || :field_type || ' from %TABLE_NAME% where %DBKEY%';
       else
         current_stmt = 'select '''|| :field_name || ''',cast(null as varchar(250)),cast(' || :field_name || ' as blob),' || :field_type || ' from %TABLE_NAME% where %DBKEY%';
