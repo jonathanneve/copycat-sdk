@@ -81,9 +81,9 @@ export abstract class SQLDriver extends Driver {
     //Meta-data queries
     protected abstract dropTable(tableName: string): Promise<void>;
     protected abstract tableExists(tableName: string): Promise<boolean>;    
-    abstract createTable(table: DB.TableDefinition): Promise<void>;
+    abstract createTable(table: DB.TableDefinition): Promise<string>;
     abstract listPrimaryKeyFields(tableName: string): Promise<string[]>;
-//    abstract updateTable(table: DB.TableDefinition): Promise<void>;
+//    abstract updateTable(table: DB.TableDefinition): Promise<string>;
     
     //Replication meta-data
     protected abstract customMetadataExists(objectName: string, objectType: string): Promise<boolean>;

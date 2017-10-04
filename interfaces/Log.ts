@@ -1,31 +1,21 @@
-export interface Log{
-    id: string,
+export interface ReplicationLogEvent{
+    logEventID: string,
     configID: number,
-    nodeID: number,
-    start: Date,
-    end: Date,
+    nodeID: string,
     transactionNumber: number,
-    toCloud: boolean
-
-}
-
-export enum EventTypes { RowReplicated, RowError, GeneralError, Debug };
-    
-export interface LogEvent{
-    id: string,
-    logID: string,
+    toCloud: boolean,
     eventTime: Date,
-    eventType: EventTypes,
+    resultOK: boolean,
     tableName: string,
-    keyNames: string,
-    keyValues: string,
+    keyNames: string[],
+    keyValues: Object[],
     operationType: string,
-    fieldsChanged: string,
+    fieldsChanged: string[],
     message: string
 }
 
 export interface DebugLogEvent {
     eventTime: Date,
-    nodeID: number,
+    nodeID: string,
     message: string
 }

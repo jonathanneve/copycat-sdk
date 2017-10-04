@@ -388,14 +388,14 @@ export class FirebirdDriver extends SQLDriver {
         return field.fieldName + " " + fieldType + (field.notNull? " not null": "");
     }
 
-    async createOrUpdateTable(tableDef: DB.TableDefinition): Promise<void> {
+    async createOrUpdateTable(tableDef: DB.TableDefinition): Promise<string> {
         if (await this.tableExists(tableDef.tableName))
-            await this.updateTable(tableDef)
+            return await this.updateTable(tableDef)
         else
-            await this.createTable(tableDef);    
+            return await this.createTable(tableDef);    
     }
 
-    async createTable(tableDef: DB.TableDefinition): Promise<void>{
+    async createTable(tableDef: DB.TableDefinition): Promise<string>{
         let fieldDefs: string[] = [];
         tableDef.fieldDefs.forEach((field) => {
             let fieldDef = this.getFieldDef(field);
@@ -407,10 +407,11 @@ export class FirebirdDriver extends SQLDriver {
             + ")";
         console.log('creating table: ' + tableDefSQL);
         await this.exec(tableDefSQL);
+        return tableDefSQL;
         //await this.commit();
     }
 
-    async updateTable(tableDef: DB.TableDefinition): Promise<void> {        
+    async updateTable(tableDef: DB.TableDefinition): Promise<string> {        
         //TODO: handle primary key changes by dropping old PK and creating a new one
         let existingTable = await this.getTableDef(tableDef.tableName, false);
         let fieldDefs: string[] = []; 
@@ -426,6 +427,7 @@ export class FirebirdDriver extends SQLDriver {
             + ")";
         console.log('altering table: ' + tableDefSQL);
         await this.exec(tableDefSQL);
+        return tableDefSQL;
         //await this.commit();
     }
 

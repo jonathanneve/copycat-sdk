@@ -405,9 +405,9 @@ class FirebirdDriver extends SQLDriver_1.SQLDriver {
     createOrUpdateTable(tableDef) {
         return __awaiter(this, void 0, void 0, function* () {
             if (yield this.tableExists(tableDef.tableName))
-                yield this.updateTable(tableDef);
+                return yield this.updateTable(tableDef);
             else
-                yield this.createTable(tableDef);
+                return yield this.createTable(tableDef);
         });
     }
     createTable(tableDef) {
@@ -423,6 +423,7 @@ class FirebirdDriver extends SQLDriver_1.SQLDriver {
                 + ")";
             console.log('creating table: ' + tableDefSQL);
             yield this.exec(tableDefSQL);
+            return tableDefSQL;
             //await this.commit();
         });
     }
@@ -442,6 +443,7 @@ class FirebirdDriver extends SQLDriver_1.SQLDriver {
                 + ")";
             console.log('altering table: ' + tableDefSQL);
             yield this.exec(tableDefSQL);
+            return tableDefSQL;
             //await this.commit();
         });
     }

@@ -17,7 +17,7 @@ export declare abstract class SQLDriver extends Driver {
     protected exec(sql: string, namedParams?: DB.Field[], unnamedParams?: Object[]): Promise<void>;
     protected abstract dropTable(tableName: string): Promise<void>;
     protected abstract tableExists(tableName: string): Promise<boolean>;
-    abstract createTable(table: DB.TableDefinition): Promise<void>;
+    abstract createTable(table: DB.TableDefinition): Promise<string>;
     abstract listPrimaryKeyFields(tableName: string): Promise<string[]>;
     protected abstract customMetadataExists(objectName: string, objectType: string): Promise<boolean>;
     protected abstract createCustomMetadata(metadata: DB.CustomMetadataDefinition): Promise<void>;

@@ -41,14 +41,15 @@ export class RestClient extends Driver {
         }
     }
         
-    async createOrUpdateTable(table: DB.TableDefinition): Promise<void> {
+    async createOrUpdateTable(table: DB.TableDefinition): Promise<string> {
         await this.doPut<DB.TableDefinition>(this.baseURL + '/api/v1/node/table/' + table.tableName, table);
+        return 'OK';
     }
-    async createTable(table: DB.TableDefinition): Promise<void> {
-        await this.createOrUpdateTable(table);
+    async createTable(table: DB.TableDefinition): Promise<string> {
+        return await this.createOrUpdateTable(table);
     }
-    async updateTable(table: DB.TableDefinition): Promise<void> {
-        await this.createOrUpdateTable(table);
+    async updateTable(table: DB.TableDefinition): Promise<string> {
+        return await this.createOrUpdateTable(table);
     }
     
     async getNodeInfo(): Promise<Node> {

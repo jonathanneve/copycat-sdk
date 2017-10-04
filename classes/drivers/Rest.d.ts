@@ -10,9 +10,9 @@ export declare class RestClient extends Driver {
     private restClient;
     private requestOptions;
     constructor(accessToken: string, baseURL: string);
-    createOrUpdateTable(table: DB.TableDefinition): Promise<void>;
-    createTable(table: DB.TableDefinition): Promise<void>;
-    updateTable(table: DB.TableDefinition): Promise<void>;
+    createOrUpdateTable(table: DB.TableDefinition): Promise<string>;
+    createTable(table: DB.TableDefinition): Promise<string>;
+    updateTable(table: DB.TableDefinition): Promise<string>;
     getNodeInfo(): Promise<Node>;
     getTransactionsToReplicate(destNode: string): Promise<number[]>;
     getRowsToReplicate(destNode: string, transaction_number: number, minCode: number): Promise<ReplicationBlock>;
@@ -22,6 +22,7 @@ export declare class RestClient extends Driver {
     private doGet<T>(url);
     private doPut<T>(url, obj);
     private doPost<T>(url, obj);
+    private doPostEmpty(url);
     private doDelete<T>(url);
     initReplicationMetadata(): Promise<void>;
     clearReplicationMetadata(): Promise<void>;

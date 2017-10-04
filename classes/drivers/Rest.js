@@ -40,16 +40,17 @@ class RestClient extends Driver_1.Driver {
     createOrUpdateTable(table) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.doPut(this.baseURL + '/api/v1/node/table/' + table.tableName, table);
+            return 'OK';
         });
     }
     createTable(table) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.createOrUpdateTable(table);
+            return yield this.createOrUpdateTable(table);
         });
     }
     updateTable(table) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.createOrUpdateTable(table);
+            return yield this.createOrUpdateTable(table);
         });
     }
     getNodeInfo() {
@@ -116,6 +117,13 @@ class RestClient extends Driver_1.Driver {
                 else
                     resolve(res.result);
             });*/
+        });
+    }
+    doPostEmpty(url) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let res = yield this.httpClient.post(url, '', this.requestOptions.additionalHeaders);
+            if (res.message.statusCode > 299)
+                throw new Error(url + ': post failed with HTTP code ' + res.message.statusCode.toString());
         });
     }
     doDelete(url) {
