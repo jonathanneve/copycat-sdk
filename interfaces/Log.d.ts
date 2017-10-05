@@ -1,4 +1,4 @@
-export interface ReplicationLogEvent {
+export declare class ReplicationLogEvent {
     logEventID: string;
     configID: number;
     nodeID: string;
@@ -12,8 +12,9 @@ export interface ReplicationLogEvent {
     operationType: string;
     fieldsChanged: string[];
     message: string;
+    constructor();
 }
-export interface DebugLogEvent {
+export declare class DebugLogEvent {
     eventTime: Date;
     nodeID: string;
     message: string;
