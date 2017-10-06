@@ -47,7 +47,8 @@ export abstract class Driver implements IDriver {
     abstract initReplicationMetadata(): Promise<void>;
     abstract clearReplicationMetadata(): Promise<void>;
 
-    abstract listTables(fullFieldDefs: boolean): Promise<DB.TableDefinition[]>;
+    abstract listTables(): Promise<string[]>;    
+    abstract getTableDef(tableName: string, fullFieldDefs: boolean): Promise<DB.TableDefinition>;
     abstract createOrUpdateTable(table: DB.TableDefinition): Promise<string>;    
 
     abstract getDataRows(tableName: string): Promise<DataRow[]>;

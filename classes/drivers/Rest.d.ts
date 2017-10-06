@@ -18,7 +18,8 @@ export declare class RestClient extends Driver {
     getRowsToReplicate(destNode: string, transaction_number: number, minCode: number): Promise<ReplicationBlock>;
     validateBlock(transactionNumber: number, maxCode: number, destNode: string): Promise<void>;
     replicateBlock(origNode: string, block: ReplicationBlock): Promise<void>;
-    listTables(fullFieldDefs: boolean): Promise<DB.TableDefinition[]>;
+    listTables(): Promise<string[]>;
+    getTableDef(tableName: string, fullFieldDefs: boolean): Promise<DB.TableDefinition>;
     private doGet<T>(url);
     private doPut<T>(url, obj);
     private doPost<T>(url, obj);

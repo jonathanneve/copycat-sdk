@@ -46,6 +46,6 @@ export declare class FirebirdDriver extends SQLDriver {
     createCustomMetadata(metadata: DB.CustomMetadataDefinition): Promise<void>;
     setReplicatingNode(origNode: string): Promise<void>;
     listPrimaryKeyFields(tableName: string): Promise<string[]>;
-    private getTableDef(tableName, fullFieldDefs);
-    listTables(fullFieldDefs: boolean): Promise<DB.TableDefinition[]>;
+    getTableDef(tableName: string, fullFieldDefs: boolean): Promise<DB.TableDefinition>;
+    listTables(): Promise<string[]>;
 }

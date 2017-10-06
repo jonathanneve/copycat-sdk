@@ -526,16 +526,15 @@ class FirebirdDriver extends SQLDriver_1.SQLDriver {
             return tableDef;
         });
     }
-    listTables(fullFieldDefs) {
+    listTables() {
         return __awaiter(this, void 0, void 0, function* () {
-            let tableDefs = [];
+            let tables = [];
             yield this.query("select rdb$relation_name from rdb$relations "
                 + "where rdb$system_flag = 0 and coalesce(rdb$relation_type, 0) = 0 and rdb$view_blr is null "
                 + "and not rdb$relation_name starting with 'CC$'", [], [], (tableRec) => __awaiter(this, void 0, void 0, function* () {
-                let tableDef = yield this.getTableDef(tableRec.fieldByName('rdb$relation_name').value.trim(), fullFieldDefs);
-                tableDefs.push(tableDef);
+                tables.push(tableRec.fieldByName('rdb$relation_name').value.trim());
             }));
-            return tableDefs;
+            return tables;
         });
     }
 }
