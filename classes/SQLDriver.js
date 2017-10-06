@@ -131,7 +131,7 @@ class SQLDriver extends Driver_1.Driver {
                 let rec = new Driver_1.DataRow();
                 let pkValues = pkFields.map(f => record.fieldByName(f).value);
                 rec.tableName = tableName;
-                rec.primaryKeys = yield this.prepareKeyValues(rec.tableName, pkFields, [], pkValues);
+                //rec.primaryKeys = await this.prepareKeyValues(rec.tableName, pkFields, [], pkValues);
                 rec.fields = record.fields.slice();
                 records.push(rec);
             }));

@@ -49,49 +49,52 @@ export class Replicator {
 
         console.log('getting list of tables')
         
-        let localTables = await localDB.listTables(true);
+        let localTables = await localDB.listTables();
         if (this.node.syncToCloud && this.node.syncToCloud.replicate) {
             //Get lists of existing tables 
-            let cloudTables = await this.cloudConnection.listTables(false);
+            let cloudTables = await this.cloudConnection.listTables();
 
             //Cycle through local tables and check if they exist on the cloud
-            for (let localTable of localTables) {
+            for (let tableName of localTables) {
 
                 let shouldRepl: boolean;                
                 if (this.node.syncToCloud.tables && this.node.syncToCloud.tables.length > 0)
-                    shouldRepl = (this.node.syncToCloud.tables.find((t) => (t.tableName == localTable.tableName)) != null);
+                    shouldRepl = (this.node.syncToCloud.tables.find((t) => (t.tableName == tableName)) != null);
                 else if (this.node.syncToCloud.excludedTables && this.node.syncToCloud.excludedTables.length > 0)
-                    shouldRepl = (this.node.syncToCloud.excludedTables.find((val) => (val == localTable.tableName)) == null);
+                    shouldRepl = (this.node.syncToCloud.excludedTables.find((val) => (val == tableName)) == null);
                 else
                     shouldRepl = true;
                     
                 if (shouldRepl) {
-                    let cloudTable = cloudTables.find((t: DB.TableDefinition) => (t.tableName.toUpperCase() == localTable.tableName.toUpperCase()));
+                    let cloudTable = cloudTables.find((t) => (t.toUpperCase() == tableName.toUpperCase()));
+                    let localTableDef = await localDB.getTableDef(tableName, true);
                     if (cloudTable) {
                         //Table already exists in the cloud
+                        let cloudTableDef = await this.cloudConnection.getTableDef(tableName, true);
+
                         //Compare list of fields and add any missing fields 
-                        for (let localField of localTable.fieldDefs) {
-                            if (!cloudTable.fieldDefs.find((f) => (f.fieldName.toUpperCase() == localField.fieldName.toUpperCase()))) {
-                                await this.cloudConnection.updateTable(localTable)
+                        for (let localField of localTableDef.fieldDefs) {
+                            if (!cloudTableDef.fieldDefs.find((f) => (f.fieldName.toUpperCase() == localField.fieldName.toUpperCase()))) {
+                                await this.cloudConnection.updateTable(localTableDef)
                                 break;
                             }
                         }
                         //Create triggers in case they don't already exist
-                        await this.createLocalTriggers(localDB, localTable.tableName);                        
+                        await this.createLocalTriggers(localDB, tableName);                        
                     }
                     else {
                         //The table doesn't exist in the cloud, and should be replicated
                         //      1. Create it in the cloud
                         //      2. Create triggers locally
                         //      3. Upload existing data from local DB
-                        await this.cloudConnection.createTable(localTable);
-                        await this.createLocalTriggers(localDB, localTable.tableName);
+                        await this.cloudConnection.createTable(localTableDef);
+                        await this.createLocalTriggers(localDB, tableName);
                         //await this.pumpTableToCloud(localTable);
                     }
                 }
                 else {
                     //Remove local triggers if table shouldn't be replicated
-                    await localDB.dropTriggers(localTable.tableName);
+                    await localDB.dropTriggers(tableName);
                 }
             }
 
@@ -102,7 +105,7 @@ export class Replicator {
             //We shouldn't be replicating to the cloud at all (does that ever make sense?)
             //Remove all triggers 
             for (let localTable of localTables) {
-                await localDB.dropTriggers(localTable.tableName);
+                await localDB.dropTriggers(localTable);
             }
         }
     }

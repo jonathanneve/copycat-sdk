@@ -74,10 +74,14 @@ export class RestClient extends Driver {
         + block.transactionID.toString() + '/blocks/' +block.maxCode.toString(), block);
     }
 
-    async listTables(fullFieldDefs: boolean): Promise<DB.TableDefinition[]> {
-        return await this.doGet<DB.TableDefinition[]>(this.baseURL + '/api/v1/node/tables');
+    async listTables(): Promise<string[]> {
+        return await this.doGet<string[]>(this.baseURL + '/api/v1/node/tables');
     }    
         
+    async getTableDef(tableName: string, fullFieldDefs: boolean): Promise<DB.TableDefinition> {
+        return await this.doGet<DB.TableDefinition>(this.baseURL + '/api/v1/node/table/' + tableName);
+    }    
+
     private async doGet<T>(url: string): Promise<T>{        
         let res = await this.restClient.get<T>(url, this.requestOptions);      
         if (res.result)

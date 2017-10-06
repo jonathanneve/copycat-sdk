@@ -469,7 +469,7 @@ export class FirebirdDriver extends SQLDriver {
         return keys;
     }
 
-    private async getTableDef(tableName: string, fullFieldDefs: boolean) : Promise<DB.TableDefinition> {
+    public async getTableDef(tableName: string, fullFieldDefs: boolean) : Promise<DB.TableDefinition> {
         let tableDef = new DB.TableDefinition();
         tableDef.tableName = tableName;
         tableDef.fieldDefs = [];
@@ -506,15 +506,14 @@ export class FirebirdDriver extends SQLDriver {
         return tableDef;
     }
     
-    async listTables(fullFieldDefs: boolean): Promise<DB.TableDefinition[]>{
-        let tableDefs: DB.TableDefinition[] = [];
+    async listTables(): Promise<string[]>{
+        let tables: string[] = [];
         await this.query("select rdb$relation_name from rdb$relations "
             + "where rdb$system_flag = 0 and coalesce(rdb$relation_type, 0) = 0 and rdb$view_blr is null "
             + "and not rdb$relation_name starting with 'CC$'", [], [], async (tableRec: DB.Record) => {
-            let tableDef = await this.getTableDef((<string>tableRec.fieldByName('rdb$relation_name').value).trim(), fullFieldDefs);
-            tableDefs.push(tableDef);
+            tables.push((<string>tableRec.fieldByName('rdb$relation_name').value).trim());
         });
-        return tableDefs;
+        return tables;
     } 
 }
 

@@ -81,9 +81,14 @@ class RestClient extends Driver_1.Driver {
                 + block.transactionID.toString() + '/blocks/' + block.maxCode.toString(), block);
         });
     }
-    listTables(fullFieldDefs) {
+    listTables() {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.doGet(this.baseURL + '/api/v1/node/tables');
+        });
+    }
+    getTableDef(tableName, fullFieldDefs) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.doGet(this.baseURL + '/api/v1/node/table/' + tableName);
         });
     }
     doGet(url) {

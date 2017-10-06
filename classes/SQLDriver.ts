@@ -157,7 +157,7 @@ export abstract class SQLDriver extends Driver {
                 let pkValues = pkFields.map(f => record.fieldByName(f).value);
 
                 rec.tableName = tableName;
-                rec.primaryKeys = await this.prepareKeyValues(rec.tableName, pkFields, [], pkValues);
+                //rec.primaryKeys = await this.prepareKeyValues(rec.tableName, pkFields, [], pkValues);
                 rec.fields = record.fields.slice();
                 records.push(rec);
             });
