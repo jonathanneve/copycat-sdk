@@ -148,9 +148,9 @@ export abstract class SQLDriver extends Driver {
         return transactions;
     }
 
-    async getDataRows(tableName: string): Promise<DataRow[]>{
+    async getDataRows(tableName: string, callback: (row: DataRow) => boolean): Promise<void>{
         let pkFields = await this.listPrimaryKeyFields(tableName);    
-        let records: DataRow[] = [];
+        //let records: DataRow[] = [];
         await this.query('select * from ' + tableName, null, null,
             async (record: DB.Record) => {
                 let rec = new DataRow();
@@ -159,9 +159,11 @@ export abstract class SQLDriver extends Driver {
                 rec.tableName = tableName;
                 //rec.primaryKeys = await this.prepareKeyValues(rec.tableName, pkFields, [], pkValues);
                 rec.fields = record.fields.slice();
-                records.push(rec);
+                return callback(rec);
+
+                //records.push(rec);
             });
-        return records;
+        //return records;
     }
 
     async getRowsToReplicate(destNode: string, transaction_number: number, minCode?: number): Promise<ReplicationBlock>{
@@ -320,7 +322,7 @@ export abstract class SQLDriver extends Driver {
         return record.primaryKeys.map(f => f.value);    
     }
 
-    public async importTableData(tableName: string, records: DataRow[]): Promise<void> {
+    public async importTableData(tableName: string, records: DataRow[], finished: boolean): Promise<void> {
         if (!await this.isConnected())
         await this.connect();
         await this.startTransaction();
