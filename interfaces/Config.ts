@@ -32,3 +32,12 @@ export class Configuration{
     }
 
 }
+
+export enum ConfigurationState { OK, HasErrors };
+
+export class ConfigurationStatus {
+    configID: number;
+    state: ConfigurationState;
+    errors: string[];
+    lastReplication: Date;
+}
