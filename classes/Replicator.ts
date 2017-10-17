@@ -121,10 +121,11 @@ export class Replicator {
                 for(let trNumber of transactions) {
                     let block: ReplicationBlock;
                     do {
-                        block = await srcDB.getRowsToReplicate(destNode, trNumber, (block? block.maxCode: -1));
+                        block = await srcDB.getRowsToReplicate(destNode, trNumber, (block ? block.maxCode : -1));
+                        block.cycleID = cycle.cycleID;
                         if (block.records.length > 0) {
                             await destDB.replicateBlock(srcNode, block);                                                       
-                            await srcDB.validateBlock(block.transactionID, block.maxCode, destNode);                
+                            await srcDB.validateBlock(block.transactionID, block.maxCode, destNode);                               
                         }
                     }
                     while (!block.transactionFinished);
@@ -132,7 +133,8 @@ export class Replicator {
             }
         };
         await this.refreshConfig();
-        
+        let cycle = await this.cloudConnection.newReplicationCycle();        
+
         if (this.node.syncToCloud && this.node.syncToCloud.replicate) 
             await doRepl(this.localConfig.localDatabase, this.localConfig.localNode.nodeName, this.cloudConnection, 'CLOUD');
         if (this.node.syncFromCloud && this.node.syncFromCloud.replicate) 

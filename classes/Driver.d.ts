@@ -8,6 +8,7 @@ export declare class DataRow {
     fields: DB.Field[];
 }
 export declare class ReplicationBlock {
+    cycleID: string;
     transactionID: number;
     maxCode: number;
     transactionFinished: boolean;

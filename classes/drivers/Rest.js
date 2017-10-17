@@ -27,6 +27,11 @@ class RestClient extends Driver_1.Driver {
             }
         };
     }
+    newReplicationCycle() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.doPost(this.baseURL + '/api/v1/node/repl/cycles/', null);
+        });
+    }
     getDataRows(tableName) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.doGet(this.baseURL + '/api/v1/node/table/' + tableName + "/data");

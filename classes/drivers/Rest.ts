@@ -4,6 +4,7 @@ import {Node} from "../../interfaces/Nodes"
 import * as DB from "../DB"
 import * as http from 'typed-rest-client/HttpClient';
 import * as rest from 'typed-rest-client/RestClient';
+import {ReplicationCycle} from "../../interfaces/Log"
 //import { FirebirdDriver } from "./Firebird";
 
 console.log('rest');
@@ -17,6 +18,10 @@ interface EmptyRequest {
 }
 
 export class RestClient extends Driver {
+
+    async newReplicationCycle(): Promise<ReplicationCycle> {
+        return await this.doPost<ReplicationCycle>(this.baseURL + '/api/v1/node/repl/cycles/', null);
+    }
 
     async getDataRows(tableName: string): Promise<DataRow[]> {
         return await this.doGet<DataRow[]>(this.baseURL + '/api/v1/node/table/' + tableName + "/data");

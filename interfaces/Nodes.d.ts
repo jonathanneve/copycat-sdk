@@ -1,3 +1,4 @@
+import { ReplicationCycle } from "./Log";
 export declare class TableOptions {
     tableName: string;
     excludedFields?: string[];
@@ -14,6 +15,6 @@ export declare class Node {
     accessToken: string;
     syncToCloud: ReplicationOptions;
     syncFromCloud: ReplicationOptions;
-    lastReplication?: Date;
+    lastCycle?: ReplicationCycle;
     getTableSyncLabel(direction: string): string;
 }

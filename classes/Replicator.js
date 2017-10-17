@@ -115,6 +115,7 @@ class Replicator {
                         let block;
                         do {
                             block = yield srcDB.getRowsToReplicate(destNode, trNumber, (block ? block.maxCode : -1));
+                            block.cycleID = cycle.cycleID;
                             if (block.records.length > 0) {
                                 yield destDB.replicateBlock(srcNode, block);
                                 yield srcDB.validateBlock(block.transactionID, block.maxCode, destNode);
@@ -125,6 +126,7 @@ class Replicator {
                 }
             });
             yield this.refreshConfig();
+            let cycle = yield this.cloudConnection.newReplicationCycle();
             if (this.node.syncToCloud && this.node.syncToCloud.replicate)
                 yield doRepl(this.localConfig.localDatabase, this.localConfig.localNode.nodeName, this.cloudConnection, 'CLOUD');
             if (this.node.syncFromCloud && this.node.syncFromCloud.replicate)

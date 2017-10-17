@@ -4,5 +4,4 @@ export declare class User {
     email: string;
     firstname: string;
     lastname: string;
-    plan: number;
 }

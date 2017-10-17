@@ -1,9 +1,11 @@
 import { Driver, ReplicationBlock, DataRow } from "../Driver";
 import { Node } from "../../interfaces/Nodes";
 import * as DB from "../DB";
+import { ReplicationCycle } from "../../interfaces/Log";
 export declare class RestClient extends Driver {
     accessToken: string;
     baseURL: string;
+    newReplicationCycle(): Promise<ReplicationCycle>;
     getDataRows(tableName: string): Promise<DataRow[]>;
     importTableData(tableName: string, records: DataRow[]): Promise<void>;
     private httpClient;

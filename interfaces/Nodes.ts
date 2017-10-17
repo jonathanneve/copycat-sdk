@@ -1,4 +1,6 @@
-export class TableOptions{
+import { ReplicationCycle } from "./Log";
+
+export class TableOptions {
     tableName: string;
     excludedFields?: string[];
     includedFields?: string[];
@@ -18,7 +20,7 @@ export class Node{
     accessToken: string;
     syncToCloud: ReplicationOptions = { replicate: true };
     syncFromCloud: ReplicationOptions = { replicate: false };
-    lastReplication?: Date;
+    lastCycle?: ReplicationCycle;
 
     getTableSyncLabel(direction: string): string {
         let replOptions = (direction === "TO") ? this.syncToCloud : this.syncFromCloud;
