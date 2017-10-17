@@ -8,7 +8,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const DB = require("./DB");
 const Rest_1 = require("./Drivers/Rest");
+const shortid = require("shortid");
 class Replicator {
     constructor(localConf) {
         this.localConfig = localConf;
@@ -31,10 +33,35 @@ class Replicator {
             yield localDB.createTriggers(tableOptions);
         });
     }
+    uploadBlobs(row) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let fields = [];
+            for (let f of row.fields) {
+                if (!f.isNull() && ((f.dataType === DB.DataType.Blob) || (f.dataType === DB.DataType.Memo))) {
+                    let blobID = shortid.generate();
+                    yield this.cloudConnection.uploadBlob(f.value, blobID);
+                    f.value = blobID;
+                }
+                fields.push(f);
+            }
+            row.fields = fields;
+            return row;
+        });
+    }
     pumpTableToCloud(table) {
         return __awaiter(this, void 0, void 0, function* () {
-            let rows = yield this.localConfig.localDatabase.getDataRows(table.tableName);
-            yield this.cloudConnection.importTableData(table.tableName, rows);
+            let records = [];
+            let sendRecords = (finished) => __awaiter(this, void 0, void 0, function* () {
+                yield this.cloudConnection.importTableData(table.tableName, records, finished);
+                records = [];
+            });
+            yield this.localConfig.localDatabase.getDataRows(table.tableName, (row) => __awaiter(this, void 0, void 0, function* () {
+                records.push(yield this.uploadBlobs(row));
+                if (JSON.stringify(records).length >= Rest_1.MAX_REQUEST_SIZE)
+                    yield sendRecords(false);
+                return true;
+            }));
+            yield sendRecords(true);
         });
     }
     initializeLocalNode() {

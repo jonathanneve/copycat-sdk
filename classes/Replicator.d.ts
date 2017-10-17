@@ -1,4 +1,5 @@
 import * as DB from "./DB";
+import { DataRow } from "./Driver";
 import { Node } from '../interfaces/Nodes';
 import { ClientConfiguration } from '../interfaces/ClientConfig';
 import { RestClient } from "./Drivers/Rest";
@@ -11,6 +12,7 @@ export declare class Replicator {
     constructor(localConf: ClientConfiguration);
     refreshConfig(): Promise<void>;
     createLocalTriggers(localDB: SQLDriver, tableName: string): Promise<void>;
+    uploadBlobs(row: DataRow): Promise<DataRow>;
     pumpTableToCloud(table: DB.TableDefinition): Promise<void>;
     initializeLocalNode(): Promise<void>;
     initializeCloudDatabase(): Promise<void>;

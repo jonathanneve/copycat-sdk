@@ -4,10 +4,12 @@ import {Node} from "../../interfaces/Nodes"
 import * as DB from "../DB"
 import * as http from 'typed-rest-client/HttpClient';
 import * as rest from 'typed-rest-client/RestClient';
-import {ReplicationCycle} from "../../interfaces/Log"
+import { ReplicationCycle } from "../../interfaces/Log"
+import * as SSE from "eventsource"
 //import { FirebirdDriver } from "./Firebird";
 
 console.log('rest');
+export const MAX_REQUEST_SIZE = 100000;
 
 interface ITransactionList {
     transactions: number[];
@@ -21,13 +23,6 @@ export class RestClient extends Driver {
 
     async newReplicationCycle(): Promise<ReplicationCycle> {
         return await this.doPost<ReplicationCycle>(this.baseURL + '/api/v1/node/repl/cycles/', null);
-    }
-
-    async getDataRows(tableName: string): Promise<DataRow[]> {
-        return await this.doGet<DataRow[]>(this.baseURL + '/api/v1/node/table/' + tableName + "/data");
-    }
-    async importTableData(tableName: string, records: DataRow[]) {
-        await this.doPut<DataRow[]>(this.baseURL + '/api/v1/node/table/' + tableName + "/data", records);
     }
 
     private httpClient: http.HttpClient;
@@ -45,6 +40,58 @@ export class RestClient extends Driver {
                 "Content-Type": 'application/json'}
         }
     }
+    
+    callSSE(url: string, options: any, callback: (data: any) => Promise<any>): Promise<void> {
+        return new Promise<void>((resolve, reject) => {            
+            let es = new SSE.EventSource(url, options);
+            es.onmessage = (e) => {
+                if (e.id == "CLOSE") {
+                    es.close(); 
+                    resolve();
+                }
+                else        
+                    callback(e.data);
+            };
+            es.onerror = function() {
+                reject();
+            }; 
+        })  
+    }
+
+    async uploadBlob(value: Buffer, blobID: string): Promise<void> {
+        let start = 0;
+        let end = MAX_REQUEST_SIZE;
+        
+        while (start < value.length) {
+            let finished = false;
+            if (end >= value.length) {
+                end = value.length;
+                finished = true;
+            }
+            let chunk = new Buffer(end-start);
+            value.copy(chunk, 0, start, end);
+            let chunkStr = chunk.toString('base64');
+
+            await this.doPut<string>(
+                this.baseURL + '/api/v1/node/blob/'
+                + blobID + '?batch_id='
+                + blobID + "&batch_end=" + (finished ? "1 " : "0"), chunkStr);
+
+            start = end;
+            end = start + MAX_REQUEST_SIZE;            
+        }        
+    }
+
+    async getDataRows(tableName: string, callback: (row: DataRow) => Promise<boolean>): Promise<void> {
+        return this.callSSE(this.baseURL + '/api/v1/node/table/' + tableName + "/data", { headers: this.requestOptions.additionalHeaders }, callback);
+        //let rows = await this.doGet<DataRow[]>(this.baseURL + '/api/v1/node/table/' + tableName + "/data");
+    }
+
+    async importTableData(tableName: string, records: DataRow[], finished: boolean) {
+        await this.doPut<DataRow[]>(this.baseURL + '/api/v1/node/table/' + tableName + "/data" +
+        "?batch_id=dataimport&batch_end=" + (finished? "1": "0"), records);
+    }
+
         
     async createOrUpdateTable(table: DB.TableDefinition): Promise<string> {
         await this.doPut<DB.TableDefinition>(this.baseURL + '/api/v1/node/table/' + table.tableName, table);

@@ -3,8 +3,9 @@ import { Driver, ReplicationBlock, DataRow } from "./Driver"
 import {Configuration} from '../interfaces/Config';
 import {Node} from '../interfaces/Nodes'
 import {ClientConfiguration} from '../interfaces/ClientConfig'
-import {RestClient} from "./Drivers/Rest"
+import {RestClient, MAX_REQUEST_SIZE} from "./Drivers/Rest"
 import {SQLDriver} from './SQLDriver'
+import * as shortid from "shortid"
 
 export class Replicator {
     private localConfig: ClientConfiguration;     
@@ -34,9 +35,35 @@ export class Replicator {
         await localDB.createTriggers(tableOptions);      
     }
 
-    async pumpTableToCloud(table: DB.TableDefinition): Promise<void>{
-        let rows = await this.localConfig.localDatabase.getDataRows(table.tableName);
-        await this.cloudConnection.importTableData(table.tableName, rows);
+    async uploadBlobs(row: DataRow): Promise<DataRow> {
+        let fields: DB.Field[] = [];
+        for (let f of row.fields) {
+            if (!f.isNull() && ((f.dataType === DB.DataType.Blob) || (f.dataType === DB.DataType.Memo))) {                
+                let blobID = shortid.generate();
+                await this.cloudConnection.uploadBlob(<Buffer>f.value, blobID);
+                f.value = blobID;
+            }
+            fields.push(f);
+        }
+        row.fields = fields;
+        return row;
+    }
+
+    async pumpTableToCloud(table: DB.TableDefinition): Promise<void>{        
+        let records: DataRow[] = [];
+        let sendRecords = async (finished: boolean) => {
+            await this.cloudConnection.importTableData(table.tableName, records, finished);
+            records = [];
+        }
+        await this.localConfig.localDatabase.getDataRows(table.tableName,
+            async (row: DataRow) => {                
+                records.push(await this.uploadBlobs(row));
+                if (JSON.stringify(records).length >= MAX_REQUEST_SIZE)
+                    await sendRecords(false);    
+
+                return true;
+            });
+        await sendRecords(true);                
     }
 
     async initializeLocalNode(): Promise<void> {

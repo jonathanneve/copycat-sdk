@@ -1,17 +1,21 @@
+/// <reference types="node" />
 import { Driver, ReplicationBlock, DataRow } from "../Driver";
 import { Node } from "../../interfaces/Nodes";
 import * as DB from "../DB";
 import { ReplicationCycle } from "../../interfaces/Log";
+export declare const MAX_REQUEST_SIZE = 100000;
 export declare class RestClient extends Driver {
     accessToken: string;
     baseURL: string;
     newReplicationCycle(): Promise<ReplicationCycle>;
-    getDataRows(tableName: string): Promise<DataRow[]>;
-    importTableData(tableName: string, records: DataRow[]): Promise<void>;
     private httpClient;
     private restClient;
     private requestOptions;
     constructor(accessToken: string, baseURL: string);
+    callSSE(url: string, options: any, callback: (data: any) => Promise<any>): Promise<void>;
+    uploadBlob(value: Buffer, blobID: string): Promise<void>;
+    getDataRows(tableName: string, callback: (row: DataRow) => Promise<boolean>): Promise<void>;
+    importTableData(tableName: string, records: DataRow[], finished: boolean): Promise<void>;
     createOrUpdateTable(table: DB.TableDefinition): Promise<string>;
     createTable(table: DB.TableDefinition): Promise<string>;
     updateTable(table: DB.TableDefinition): Promise<string>;

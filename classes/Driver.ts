@@ -52,8 +52,8 @@ export abstract class Driver implements IDriver {
     abstract getTableDef(tableName: string, fullFieldDefs: boolean): Promise<DB.TableDefinition>;
     abstract createOrUpdateTable(table: DB.TableDefinition): Promise<string>;    
 
-    abstract getDataRows(tableName: string): Promise<DataRow[]>;
-    abstract importTableData(tableName: string, records: DataRow[]): Promise<void>;
+    abstract getDataRows(tableName: string, callback: (row: DataRow) => Promise<boolean>): Promise<void>;
+    abstract importTableData(tableName: string, records: DataRow[], finished: boolean): Promise<void>;
 
     /*customMetadataExists(objectName: string, objectType: string): boolean;
     createCustomMetadata(metadata: DB.CustomMetadataDefinition): void;*/

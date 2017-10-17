@@ -123,19 +123,19 @@ class SQLDriver extends Driver_1.Driver {
             return transactions;
         });
     }
-    getDataRows(tableName) {
+    getDataRows(tableName, callback) {
         return __awaiter(this, void 0, void 0, function* () {
             let pkFields = yield this.listPrimaryKeyFields(tableName);
-            let records = [];
+            //let records: DataRow[] = [];
             yield this.query('select * from ' + tableName, null, null, (record) => __awaiter(this, void 0, void 0, function* () {
                 let rec = new Driver_1.DataRow();
                 let pkValues = pkFields.map(f => record.fieldByName(f).value);
                 rec.tableName = tableName;
                 //rec.primaryKeys = await this.prepareKeyValues(rec.tableName, pkFields, [], pkValues);
                 rec.fields = record.fields.slice();
-                records.push(rec);
+                return yield callback(rec);
             }));
-            return records;
+            //return records;
         });
     }
     getRowsToReplicate(destNode, transaction_number, minCode) {
@@ -278,7 +278,7 @@ class SQLDriver extends Driver_1.Driver {
     getWhereFieldValues(record) {
         return record.primaryKeys.map(f => f.value);
     }
-    importTableData(tableName, records) {
+    importTableData(tableName, records, finished) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!(yield this.isConnected()))
                 yield this.connect();

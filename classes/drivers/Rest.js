@@ -11,8 +11,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Driver_1 = require("../Driver");
 const http = require("typed-rest-client/HttpClient");
 const rest = require("typed-rest-client/RestClient");
+const SSE = require("eventsource");
 //import { FirebirdDriver } from "./Firebird";
 console.log('rest');
+exports.MAX_REQUEST_SIZE = 100000;
 class RestClient extends Driver_1.Driver {
     constructor(accessToken, baseURL) {
         super();
@@ -32,14 +34,53 @@ class RestClient extends Driver_1.Driver {
             return yield this.doPost(this.baseURL + '/api/v1/node/repl/cycles/', null);
         });
     }
-    getDataRows(tableName) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield this.doGet(this.baseURL + '/api/v1/node/table/' + tableName + "/data");
+    callSSE(url, options, callback) {
+        return new Promise((resolve, reject) => {
+            let es = new SSE.EventSource(url, options);
+            es.onmessage = (e) => {
+                if (e.id == "CLOSE") {
+                    es.close();
+                    resolve();
+                }
+                else
+                    callback(e.data);
+            };
+            es.onerror = function () {
+                reject();
+            };
         });
     }
-    importTableData(tableName, records) {
+    uploadBlob(value, blobID) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.doPut(this.baseURL + '/api/v1/node/table/' + tableName + "/data", records);
+            let start = 0;
+            let end = exports.MAX_REQUEST_SIZE;
+            while (start < value.length) {
+                let finished = false;
+                if (end >= value.length) {
+                    end = value.length;
+                    finished = true;
+                }
+                let chunk = new Buffer(end - start);
+                value.copy(chunk, 0, start, end);
+                let chunkStr = chunk.toString('base64');
+                yield this.doPut(this.baseURL + '/api/v1/node/blob/'
+                    + blobID + '?batch_id='
+                    + blobID + "&batch_end=" + (finished ? "1 " : "0"), chunkStr);
+                start = end;
+                end = start + exports.MAX_REQUEST_SIZE;
+            }
+        });
+    }
+    getDataRows(tableName, callback) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return this.callSSE(this.baseURL + '/api/v1/node/table/' + tableName + "/data", { headers: this.requestOptions.additionalHeaders }, callback);
+            //let rows = await this.doGet<DataRow[]>(this.baseURL + '/api/v1/node/table/' + tableName + "/data");
+        });
+    }
+    importTableData(tableName, records, finished) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.doPut(this.baseURL + '/api/v1/node/table/' + tableName + "/data" +
+                "?batch_id = dataimport & batch_end=" + (finished ? "1" : "0"), records);
         });
     }
     createOrUpdateTable(table) {

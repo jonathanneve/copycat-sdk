@@ -30,7 +30,7 @@ export declare abstract class SQLDriver extends Driver {
     abstract dropTriggers(tableName: string): Promise<void>;
     createTriggers(tableOptions: TableOptions): Promise<void>;
     getTransactionsToReplicate(destNode: string): Promise<number[]>;
-    getDataRows(tableName: string): Promise<DataRow[]>;
+    getDataRows(tableName: string, callback: (row: DataRow) => Promise<boolean>): Promise<void>;
     getRowsToReplicate(destNode: string, transaction_number: number, minCode?: number): Promise<ReplicationBlock>;
     protected abstract getFieldType(sqlType: number): DB.DataType;
     protected getChangedFields(change_number: string, nodeName: string): Promise<DB.Field[]>;
@@ -44,6 +44,6 @@ export declare abstract class SQLDriver extends Driver {
     private prepareKeyValues(tableName, keyNames, keyValues, keyValueObjects?);
     protected getWhereClause(record: DataRow): string;
     protected getWhereFieldValues(record: DataRow): Object[];
-    importTableData(tableName: string, records: DataRow[]): Promise<void>;
+    importTableData(tableName: string, records: DataRow[], finished: boolean): Promise<void>;
     replicateBlock(origNode: string, block: ReplicationBlock): Promise<void>;
 }

@@ -11,7 +11,7 @@ export declare class Alert {
     alertDate: Date;
     message: string;
     active: boolean;
-    isNew: boolean;
+    newAlert: boolean;
     replicationCycleID?: number;
     replicationLogID?: number;
 }
