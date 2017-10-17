@@ -10,6 +10,7 @@ export class DataRow {
 }
 
 export class ReplicationBlock {
+    cycleID: string;
     transactionID: number;
     maxCode: number;
     transactionFinished: boolean;
