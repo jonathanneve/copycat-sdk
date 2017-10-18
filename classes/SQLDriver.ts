@@ -60,7 +60,7 @@ export abstract class SQLDriver extends Driver {
         }
         return sql; 
     }
-    protected async query(sql: string, namedParams?: DB.Field[], unnamedParams?: Object[], callback?: (record: DB.Record) => Promise<boolean | void>): Promise<boolean>{
+    public async query(sql: string, namedParams?: DB.Field[], unnamedParams?: Object[], callback?: (record: DB.Record) => Promise<boolean | void>): Promise<boolean>{
         let params = [];
         sql = this.processParams(sql, params, namedParams, unnamedParams);
 
@@ -69,7 +69,7 @@ export abstract class SQLDriver extends Driver {
         return await this.executeSQL(sql, true, true, callback, params);
     }
 
-    protected async exec(sql: string, namedParams?: DB.Field[], unnamedParams?: Object[]): Promise<void> {
+    public async exec(sql: string, namedParams?: DB.Field[], unnamedParams?: Object[]): Promise<void> {
         let params = [];
         sql = this.processParams(sql, params, namedParams, unnamedParams);
         
