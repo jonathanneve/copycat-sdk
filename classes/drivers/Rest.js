@@ -80,7 +80,7 @@ class RestClient extends Driver_1.Driver {
     importTableData(tableName, records, finished) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.doPut(this.baseURL + '/api/v1/node/table/' + tableName + "/data" +
-                "?batch_id = dataimport & batch_end=" + (finished ? "1" : "0"), records);
+                "?batch_id=dataimport&batch_end=" + (finished ? "1" : "0"), records);
         });
     }
     createOrUpdateTable(table) {

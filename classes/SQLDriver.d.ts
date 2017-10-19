@@ -13,8 +13,8 @@ export declare abstract class SQLDriver extends Driver {
     protected abstract rollback(): Promise<void>;
     protected abstract executeSQL(sql: string, autocreateTR: boolean, fetchResultSet?: boolean, callback?: (record: DB.Record) => Promise<boolean | void>, params?: Object[]): Promise<boolean>;
     private processParams(sql, resultParams, namedParams?, unnamedParams?);
-    protected query(sql: string, namedParams?: DB.Field[], unnamedParams?: Object[], callback?: (record: DB.Record) => Promise<boolean | void>): Promise<boolean>;
-    protected exec(sql: string, namedParams?: DB.Field[], unnamedParams?: Object[]): Promise<void>;
+    query(sql: string, namedParams?: DB.Field[], unnamedParams?: Object[], callback?: (record: DB.Record) => Promise<boolean | void>): Promise<boolean>;
+    exec(sql: string, namedParams?: DB.Field[], unnamedParams?: Object[]): Promise<void>;
     protected abstract dropTable(tableName: string): Promise<void>;
     protected abstract tableExists(tableName: string): Promise<boolean>;
     abstract createTable(table: DB.TableDefinition): Promise<string>;
