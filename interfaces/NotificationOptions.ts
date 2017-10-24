@@ -1,7 +1,7 @@
 import { AlertLevel } from "./Alerts";
 
 export class NotificationOptions {
-    notiyID:string;
+    notifyID:string;
     notify:boolean;
     sameError:number;
     waitNotify:number;
