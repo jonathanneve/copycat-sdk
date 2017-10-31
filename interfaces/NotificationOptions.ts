@@ -1,15 +1,15 @@
 import { AlertLevel } from "./Alerts";
 
 export class NotificationOptions {
-    notifyID:string;
-    notify:boolean;
-    sameError:number;
-    waitNotify:number;
-    noReplication:number;
+    nodeID:string
+    onReplicationError:boolean;
+    timeBetweenNotifications:number;
+    delayBeforeFirstNotification:number;
+    noReplicationTimeout:number;
 }
 
 export class EmailNotificationOptions {
-    emailNotifyID: string;
+    nodeID:string;
     email:string;
     alertlevel : AlertLevel;
     active:boolean;
