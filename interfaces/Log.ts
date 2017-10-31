@@ -1,15 +1,16 @@
 export enum ReplicationLogEventType { Row, EmptyLog, GeneralError };
 
 export class ReplicationCycleDirection {
+    rowsToReplicate: number;
     rowsReplicated: number;
-    error: string;
 }
 
 export class ReplicationCycle {
     cycleID: string;
     nodeID: string;
     start: Date;
-    end: Date;
+    end: Date;    
+    error: string;
     toCloud: ReplicationCycleDirection = new ReplicationCycleDirection();
     fromCloud: ReplicationCycleDirection = new ReplicationCycleDirection();
 }

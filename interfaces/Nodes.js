@@ -23,4 +23,7 @@ class Node {
     }
 }
 exports.Node = Node;
+class NodeStatus {
+}
+exports.NodeStatus = NodeStatus;
 //# sourceMappingURL=Nodes.js.map

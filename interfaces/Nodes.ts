@@ -1,4 +1,5 @@
 import { ReplicationCycle } from "./Log";
+import { Alert } from "./Alerts";
 
 export class TableOptions {
     tableName: string;
@@ -31,4 +32,11 @@ export class Node{
         else
             return "[Selected tables]";
     }
+}
+
+export class NodeStatus{
+    rowsToReplicate: number;
+    alerts: Alert[];
+    lastReplication: Date;
+    replicating: boolean;
 }

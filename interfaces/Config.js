@@ -16,4 +16,10 @@ class Configuration {
     }
 }
 exports.Configuration = Configuration;
+class ConfigurationStatus {
+    constructor() {
+        this.alertsLevels = [];
+    }
+}
+exports.ConfigurationStatus = ConfigurationStatus;
 //# sourceMappingURL=Config.js.map
