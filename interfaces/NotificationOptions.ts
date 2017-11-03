@@ -8,7 +8,8 @@ export class NotificationOptions {
     noReplicationTimeout:number;
 }
 
-export class EmailNotificationOptions {
+export class NotificationEmail {
+    EmailID:string;
     nodeID:string;
     email:string;
     alertlevel : AlertLevel;
