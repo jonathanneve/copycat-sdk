@@ -9,7 +9,7 @@ export class NotificationOptions {
 }
 
 export class NotificationEmail {
-    EmailID:string;
+    emailID:string;
     nodeID:string;
     email:string;
     alertlevel : AlertLevel;
