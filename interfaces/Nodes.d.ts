@@ -1,4 +1,5 @@
 import { ReplicationCycle } from "./Log";
+import { Alert } from "./Alerts";
 export declare class TableOptions {
     tableName: string;
     excludedFields?: string[];
@@ -17,4 +18,10 @@ export declare class Node {
     syncFromCloud: ReplicationOptions;
     lastCycle?: ReplicationCycle;
     getTableSyncLabel(direction: string): string;
+}
+export declare class NodeStatus {
+    rowsToReplicate: number;
+    alerts: Alert[];
+    lastReplication: Date;
+    replicating: boolean;
 }

@@ -1,3 +1,4 @@
+import { AlertLevel } from "./Alerts";
 export declare class ConfigType {
     product: string;
     edition?: string;
@@ -11,4 +12,11 @@ export declare class Configuration {
     recordVersionsToKeepInCloud: number;
     constructor();
     static createFromJson(json: any): Configuration;
+}
+export declare class ConfigurationStatus {
+    alertsLevels: {
+        level: AlertLevel;
+        nb: number;
+    }[];
+    lastReplication: Date;
 }

@@ -4,6 +4,7 @@ export declare enum ReplicationLogEventType {
     GeneralError = 2,
 }
 export declare class ReplicationCycleDirection {
+    rowsToReplicate: number;
     rowsReplicated: number;
     error: string;
 }

@@ -1,7 +1,7 @@
 
 import {Driver} from '../classes/Driver'
 import {Node} from './Nodes'
-import { Alert } from "./Alerts";
+import { Alert, AlertLevel } from "./Alerts";
 
 export class ConfigType{
     product: string;
@@ -26,4 +26,10 @@ export class Configuration{
         let conf = Object.assign(new Configuration(), json);
         return conf;
     }
+}
+
+export class ConfigurationStatus{
+    configID: number;
+    alertsLevels: { level: AlertLevel, nb: number }[] = [];
+    lastReplication: Date;    
 }
