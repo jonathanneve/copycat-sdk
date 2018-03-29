@@ -1,6 +1,6 @@
 {
   "name": "@spirale-tech/copycat-sdk",
-  "version": "0.0.56",
+  "version": "0.0.81",
   "description": "CopyCat public SDK",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
