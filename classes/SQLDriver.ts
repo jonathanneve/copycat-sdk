@@ -2,6 +2,7 @@ import * as DB from './DB'
 import {Driver, ReplicationBlock, DataRow} from './Driver'
 import {TableOptions} from '../interfaces/Nodes'
 
+
 const RPLTableDefs: DB.TableDefinition[] = require("../data/rpltables.json")
 
 RPLTableDefs.forEach((table) => {
