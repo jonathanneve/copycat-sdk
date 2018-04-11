@@ -69,7 +69,9 @@ export class MySQLDriver extends SQLDriver {
             await this.startTransaction();
 
         try {
-            let res: any = await this.con.query(sql, params);                        
+        
+            let res: any = await this.con.query(sql, params);         
+                           
             if (fetchResultSet) {
                 if (callback) {
                     if (res.rows && res.rowCount > 0) {
@@ -80,10 +82,8 @@ export class MySQLDriver extends SQLDriver {
                             for (let field of res.fields) {
                                 let f: DB.Field = record.addField(field.name);
                                 
-                                //TODO: Convert data types
-                                //f.dataType = this.convertAPIFieldType(field.dataTypeID, field.dataTypeSize, field.dataTypeModifier);
                                 if ((f.dataType == DB.DataType.Blob) && (row[f.fieldName] != null)) {
-                                    //TODO: handle blobs
+                                
                                 }
                                 else
                                     f.value = row[f.fieldName];
@@ -91,7 +91,7 @@ export class MySQLDriver extends SQLDriver {
                                 fieldIndex++;
                             }
                             let result = await callback(record);
-                            //If the callback returns false, we should abort the loop
+                           
                             if ((typeof result === "boolean") && !result)
                                 break;
                             
@@ -123,9 +123,10 @@ export class MySQLDriver extends SQLDriver {
     protected tableExists(tableName: string): Promise<boolean> {
         throw new Error("Method not implemented.");
     }
-    createTable(table: TableDefinition): Promise<string> {
+    protected async createTable(table: TableDefinition): Promise<string> {
         throw new Error("Method not implemented.");
     }
+
     listPrimaryKeyFields(tableName: string): Promise<string[]> {
         throw new Error("Method not implemented.");
     }
@@ -147,8 +148,26 @@ export class MySQLDriver extends SQLDriver {
     public dropTriggers(tableName: string): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    protected getFieldType(sqlType: number): DataType {
-        throw new Error("Method not implemented.");
+    protected getFieldDef(field: DB.FieldDefinition): string {
+        let fieldType: string;
+        switch (field.dataType) {
+            case DB.DataType.String: fieldType = 'varchar(' + field.length.toString() + ")"; break;
+            case DB.DataType.FixedChar: fieldType = 'char(' + field.length.toString() + ")"; break;
+            case DB.DataType.Integer: fieldType = 'integer'; break;
+            case DB.DataType.Int64: fieldType = ''; break;
+            case DB.DataType.AutoInc: fieldType = 'integer'; break;
+            case DB.DataType.BCD: fieldType = ''; break;
+            case DB.DataType.Float: fieldType = "float"; break;
+            case DB.DataType.Boolean: fieldType = 'boolean'; break;
+            case DB.DataType.Blob: fieldType = ''; break;
+            case DB.DataType.Memo: fieldType = 'text'; break;
+            case DB.DataType.Date: fieldType = 'date'; break;
+            case DB.DataType.DateTime: fieldType = 'timestamp'; break;
+            case DB.DataType.Time: fieldType = 'time'; break;
+            case DB.DataType.SmallInt: fieldType = 'smallint'; break;
+            default: throw new Error('Data type ' + DB.DataType[field.dataType] + " (" + field.dataTypeStr +") not handle by Firebird!");
+        }
+        return '"' + field.fieldName.toLowerCase().trim() + '" ' + fieldType + (field.notNull? " not null": "");
     }
     protected setReplicatingNode(origNode: string): Promise<void> {
         throw new Error("Method not implemented.");
@@ -165,14 +184,12 @@ export class MySQLDriver extends SQLDriver {
     listTables(): Promise<string[]> {
         throw new Error("Method not implemented.");
     }
-    getTableDef(tableName: string, fullFieldDefs: boolean): Promise<TableDefinition> {
+    protected async getTableDef(tableName: string, fullFieldDefs: boolean): Promise<TableDefinition> {
+      
         throw new Error("Method not implemented.");
     }
+
     createOrUpdateTable(table: TableDefinition): Promise<string> {
         throw new Error("Method not implemented.");
     }
-
-   
-    
-
 }
