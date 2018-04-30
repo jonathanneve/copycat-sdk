@@ -7,9 +7,10 @@ import {mysql} from 'mysql';
 
 export class MySQLDriver extends SQLDriver {
 
+    
     connected : boolean = false;
     transactionActive: boolean = false;
-    con : mysql
+    connection : mysql
  // Connection
  constructor(connectionStr: string) {
     super({
@@ -17,13 +18,13 @@ export class MySQLDriver extends SQLDriver {
             "customMetadata": [],
             "triggerTemplates": []
         });
-        this.con = mysql.createConnection({
+        this.connection = mysql.createConnection({
             host: "localhost",
             user: "yourusername",
             password: "yourpassword"
           });
           
-        this.con.connect(function(err) {
+        this.connection.connect(function(err) {
             if (err) throw err;
             console.log("Connected!");
         });
@@ -35,12 +36,12 @@ export class MySQLDriver extends SQLDriver {
         throw new Error("Method not implemented.");
     }
     protected async connect(): Promise<void> {
-        await this.con.connect();
+        await this.connection.connect();
         this.connected = true;
         throw new Error("Method not implemented.");
     }
     protected async disconnect(): Promise<void> {
-        await this.con.end();
+        await this.connection.end();
         this.connected = false;
         throw new Error("Method not implemented.");
     }
@@ -49,60 +50,64 @@ export class MySQLDriver extends SQLDriver {
         throw new Error("Method not implemented.");
     }
     protected async startTransaction(): Promise<void> {
-        await this.con.query("BEGIN");
+        await this.connection.query("BEGIN");
         this.transactionActive = true;
         throw new Error("Method not implemented.");
     }
     protected async commit(): Promise<void> {
-        await this.con.query("COMMIT");
+        await this.connection.query("COMMIT");
         this.transactionActive = false;
         throw new Error("Method not implemented.");
     }
     protected async rollback(): Promise<void> {
-        await this.con.query("ROLLBACK");
+        await this.connection.query("ROLLBACK");
         this.transactionActive = false;
         throw new Error("Method not implemented.");
     }
-    protected async executeSQL(sql: string, autocreateTR: boolean, fetchResultSet?: boolean, callback?: (record: DB.Record) => Promise<boolean | void>, params?: Object[]): Promise<boolean> {
+    public async executeSQL(sql: string, autocreateTR: boolean, fetchResultSet?: boolean, 
+        callback?: (record: DB.Record) => Promise<boolean | void>, params?: Object[]): Promise<boolean> {                
         let autoStartTR: boolean = autocreateTR && !await this.inTransaction();
         if (autoStartTR)
             await this.startTransaction();
-
+            
         try {
-        
-            let res: any = await this.con.query(sql, params);         
-                           
+            if (params && params.length > 0) {
+                //Preprocess SQL text to change param markers from ? to $1, $2, etc
+                let paramIndex = 1;
+                sql = sql.replace(/\?/g, (substr) => {
+                    return "$" + paramIndex++;
+                })
+            }
+            let res: any = await this.connection.query(sql,(err, result, field)=>{
+                
+            });                        
             if (fetchResultSet) {
                 if (callback) {
-                    if (res.rows && res.rowCount > 0) {
-                        let rowIndex = 0;
-                        for (let row of res.rows){
-                            let record = new DB.Record();
-                            let fieldIndex = 0;
-                            for (let field of res.fields) {
-                                let f: DB.Field = record.addField(field.name);
-                                
-                                if ((f.dataType == DB.DataType.Blob) && (row[f.fieldName] != null)) {
-                                
-                                }
-                                else
-                                    f.value = row[f.fieldName];
-                                
-                                fieldIndex++;
-                            }
-                            let result = await callback(record);
-                           
-                            if ((typeof result === "boolean") && !result)
-                                break;
-                            
-                            rowIndex++;
+                   if(res.result && res.result.length > 0) {
+                    let rowIndex = 0;
+                    for (let row of res.result){
+                        let record = new DB.Record();
+                        let fieldIndex = 0;
+                        for (let field of res.field) {
+                            let f: DB.Field = record.addField(field.name);
+                                f.value = row[f.fieldName];         
+                            fieldIndex++;
                         }
+                        let result = await callback(record);
+                        //If the callback returns false, we should abort the loop
+                        if ((typeof result === "boolean") && !result)
+                            break;
+                        
+                        rowIndex++;
                     }
-                    else 
-                        return false;
+
+                   }
+                   else{
+                       return false
+                   }
                 }
                 else 
-                    return (res.rowCount > 0);            
+                    return (res.result.length > 0);            
             }
             else 
                 return true; 
@@ -114,16 +119,21 @@ export class MySQLDriver extends SQLDriver {
             if (autoStartTR && await this.inTransaction())
                 await this.rollback();
             throw E;
-        } 
-        throw new Error("Method not implemented.");
+        }        
     }
     protected dropTable(tableName: string): Promise<void> {
+        this.exec('DROP TABLE IF EXISTS' + tableName.toLowerCase() + ';');
         throw new Error("Method not implemented.");
     }
     protected tableExists(tableName: string): Promise<boolean> {
         throw new Error("Method not implemented.");
     }
-    protected async createTable(table: TableDefinition): Promise<string> {
+    public async createTable(table: TableDefinition): Promise<string> {  
+        let tableDefSQL = 'CREATE TABLE IF EXISTS "' + table.tableName.toLowerCase() + '" ( ' 
+        + table.fieldDefs.join(', ') 
+        + ((table.primaryKeys.length > 0)? ", primary key (" + table.primaryKeys.map(pk => '"' + pk.trim().toLowerCase() + '"').join(', ') + ")": "")
+        + ")";
+        this.exec(tableDefSQL)
         throw new Error("Method not implemented.");
     }
 
@@ -153,13 +163,13 @@ export class MySQLDriver extends SQLDriver {
         switch (field.dataType) {
             case DB.DataType.String: fieldType = 'varchar(' + field.length.toString() + ")"; break;
             case DB.DataType.FixedChar: fieldType = 'char(' + field.length.toString() + ")"; break;
-            case DB.DataType.Integer: fieldType = 'integer'; break;
-            case DB.DataType.Int64: fieldType = ''; break;
-            case DB.DataType.AutoInc: fieldType = 'integer'; break;
-            case DB.DataType.BCD: fieldType = ''; break;
+            case DB.DataType.Integer: fieldType = 'int'; break;
+            case DB.DataType.Int64: fieldType = 'bigint'; break;
+            case DB.DataType.AutoInc: fieldType = 'auto_increment'; break;
+            // case DB.DataType.BCD: fieldType = ''; break;
             case DB.DataType.Float: fieldType = "float"; break;
             case DB.DataType.Boolean: fieldType = 'boolean'; break;
-            case DB.DataType.Blob: fieldType = ''; break;
+            case DB.DataType.Blob: fieldType = 'blob'; break;
             case DB.DataType.Memo: fieldType = 'text'; break;
             case DB.DataType.Date: fieldType = 'date'; break;
             case DB.DataType.DateTime: fieldType = 'timestamp'; break;
@@ -184,11 +194,14 @@ export class MySQLDriver extends SQLDriver {
     listTables(): Promise<string[]> {
         throw new Error("Method not implemented.");
     }
-    protected async getTableDef(tableName: string, fullFieldDefs: boolean): Promise<TableDefinition> {
+    public async getTableDef(tableName: string, fullFieldDefs: boolean): Promise<TableDefinition> {
       
         throw new Error("Method not implemented.");
     }
 
+    protected getFieldType(sqlType: number): DB.DataType {
+        throw new Error("Method not implemented.");
+    }
     createOrUpdateTable(table: TableDefinition): Promise<string> {
         throw new Error("Method not implemented.");
     }
