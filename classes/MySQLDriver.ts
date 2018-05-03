@@ -3,69 +3,54 @@ import { SQLDriver } from "./SQLDriver";
 import { TableDefinition, CustomMetadataDefinition, DataType } from "./DB";
 import { TableOptions } from "../interfaces/Nodes";
 import { DataRow } from "./Driver";
-import * as MySQL from 'mysql';
+import * as MySQL from 'mysql'
 
-export class MySQLDriver extends SQLDriver {
-
-    
+export class MySQLDriver extends SQLDriver {    
     connected : boolean = false;
     transactionActive: boolean = false;
-    connection : mysql
+    connection : MySQL.Connection
+    
  // Connection
- constructor() {
+ constructor(Config : MySQL.ConnectionConfig) {
     super({
             "databaseType": "MySQL",
             "customMetadata": [],
             "triggerTemplates": []
         });
 
-        this.connection = mysql.createConnection({
-            host: 'localhost',
-            user: 'root',
-            password: '',
-            database: 'copycat',
-            debug: false,
-        });
-          
+        this.connection = MySQL.createConnection(Config);        
         this.connection.connect(function(err) {
             if (err) throw err;
             console.log("Connected!");
         });
     }
-
+    
         
     protected async isConnected(): Promise<boolean> {
         return this.connected;
-        throw new Error("Method not implemented.");
     }
     protected async connect(): Promise<void> {
         await this.connection.connect();
         this.connected = true;
-        throw new Error("Method not implemented.");
     }
     protected async disconnect(): Promise<void> {
         await this.connection.end();
         this.connected = false;
-        throw new Error("Method not implemented.");
     }
     protected async inTransaction(): Promise<boolean> {
         return this.transactionActive;
-        throw new Error("Method not implemented.");
     }
     protected async startTransaction(): Promise<void> {
         await this.connection.query("BEGIN");
         this.transactionActive = true;
-        throw new Error("Method not implemented.");
     }
     protected async commit(): Promise<void> {
         await this.connection.query("COMMIT");
         this.transactionActive = false;
-        throw new Error("Method not implemented.");
     }
     protected async rollback(): Promise<void> {
         await this.connection.query("ROLLBACK");
         this.transactionActive = false;
-        throw new Error("Method not implemented.");
     }
     public async executeSQL(sql: string, autocreateTR: boolean, fetchResultSet?: boolean, 
         callback?: (record: DB.Record) => Promise<boolean | void>, params?: Object[]): Promise<boolean> {                
@@ -148,7 +133,7 @@ export class MySQLDriver extends SQLDriver {
         throw new Error("Method not implemented.");
     }
     public async createTable(table: TableDefinition): Promise<string> {  
-        let tableDefSQL = 'CREATE TABLE IF EXISTS "' + table.tableName.toLowerCase() + '" ( ' 
+        let tableDefSQL = 'CREATE TABLE IF NOT EXISTS "' + table.tableName.toLowerCase() + '" ( ' 
         + table.fieldDefs.join(', ') 
         + ((table.primaryKeys.length > 0)? ", primary key (" + table.primaryKeys.map(pk => '"' + pk.trim().toLowerCase() + '"').join(', ') + ")": "")
         + ")";

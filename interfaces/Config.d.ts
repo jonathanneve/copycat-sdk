@@ -14,6 +14,7 @@ export declare class Configuration {
     static createFromJson(json: any): Configuration;
 }
 export declare class ConfigurationStatus {
+    configID: number;
     alertsLevels: {
         level: AlertLevel;
         nb: number;

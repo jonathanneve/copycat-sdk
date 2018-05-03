@@ -12,6 +12,6 @@ export declare class Alert {
     message: string;
     active: boolean;
     newAlert: boolean;
-    replicationCycleID?: number;
-    replicationLogID?: number;
+    replicationCycleID?: string;
+    replicationLogID?: string;
 }
