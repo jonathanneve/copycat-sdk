@@ -3,7 +3,7 @@ import { SQLDriver } from "./SQLDriver";
 import { TableDefinition, CustomMetadataDefinition, DataType } from "./DB";
 import { TableOptions } from "../interfaces/Nodes";
 import { DataRow } from "./Driver";
-import {mysql} from 'mysql';
+import * as MySQL from 'mysql';
 
 export class MySQLDriver extends SQLDriver {
 
@@ -12,17 +12,20 @@ export class MySQLDriver extends SQLDriver {
     transactionActive: boolean = false;
     connection : mysql
  // Connection
- constructor(connectionStr: string) {
+ constructor() {
     super({
             "databaseType": "MySQL",
             "customMetadata": [],
             "triggerTemplates": []
         });
+
         this.connection = mysql.createConnection({
-            host: "localhost",
-            user: "yourusername",
-            password: "yourpassword"
-          });
+            host: 'localhost',
+            user: 'root',
+            password: '',
+            database: 'copycat',
+            debug: false,
+        });
           
         this.connection.connect(function(err) {
             if (err) throw err;
@@ -78,42 +81,58 @@ export class MySQLDriver extends SQLDriver {
                     return "$" + paramIndex++;
                 })
             }
-            let res: any = await this.connection.query(sql,(err, result, field)=>{
-                
-            });                        
-            if (fetchResultSet) {
-                if (callback) {
-                   if(res.result && res.result.length > 0) {
-                    let rowIndex = 0;
-                    for (let row of res.result){
-                        let record = new DB.Record();
-                        let fieldIndex = 0;
-                        for (let field of res.field) {
-                            let f: DB.Field = record.addField(field.name);
-                                f.value = row[f.fieldName];         
-                            fieldIndex++;
+            
+            let query = new Promise<boolean>((resolve, reject) =>{
+                this.connection.query(sql,(err, results, fields)=>{                
+                    if (fetchResultSet) {
+                        if (callback) {
+                           if(results && results.length > 0) {            
+                                let resultIndex = 0;                                    
+                                let sendResults = () => {                                       
+                                    let record = new DB.Record();
+                                    let fieldIndex = 0;
+                                    for (let field of fields) {
+                                        let fieldname = field.name
+                                        let f: DB.Field = record.addField(fieldname)
+                                        f.value = results[resultIndex].fieldname
+                                        fieldIndex++
+                                    }
+                                    callback(record).then((result) => {
+                                        if ((typeof result === "boolean") && !result)
+                                            resolve(true);
+                                        else{
+                                            resultIndex++
+                                            if (resultIndex == results.length) {
+                                                resolve(true);
+                                            }
+                                            else{
+                                                sendResults();
+                                            }
+                                        }
+                                    })
+                                };
+                                sendResults();                                                                                                                         
+                            }
+                            else{
+                               resolve(false);
+                            }
                         }
-                        let result = await callback(record);
-                        //If the callback returns false, we should abort the loop
-                        if ((typeof result === "boolean") && !result)
-                            break;
-                        
-                        rowIndex++;
+                        else{ 
+                            resolve(results.length > 0);
+                        }           
                     }
-
-                   }
-                   else{
-                       return false
-                   }
-                }
-                else 
-                    return (res.result.length > 0);            
+                    else{
+                        resolve(true);     
+                    } 
+                        
+                });                            
+            });
+            let result = await query;
+            if (autoStartTR){
+                if (await this.inTransaction())
+                    this.commit();
             }
-            else 
-                return true; 
-
-            if (autoStartTR && await this.inTransaction())
-                await this.commit();
+            return result;
         }
         catch(E) {
             if (autoStartTR && await this.inTransaction())
@@ -191,11 +210,27 @@ export class MySQLDriver extends SQLDriver {
     protected parseFieldValue(dataType: DataType, fieldValue: string): Promise<Object> {
         throw new Error("Method not implemented.");
     }
-    listTables(): Promise<string[]> {
-        throw new Error("Method not implemented.");
+    async listTables(): Promise<string[]> {
+        let tables: string[] = [];
+        await this.query('SELECT table_name FROM information_schema.tables ' +
+            "WHERE table_schema NOT IN ('pg_catalog', 'information_schema') " +
+            "and table_type in ('BASE TABLE','LOCAL TEMPORARY') ORDER BY table_name", null, null, async (tableRec: DB.Record) => {
+                //let tableDef = await this.getTableDef(<string>tableRec.fieldByName('table_name').value, fullFieldDefs);
+                tables.push(<string>tableRec.fieldByName('table_name').value);
+            });
+        return tables;
     }
     public async getTableDef(tableName: string, fullFieldDefs: boolean): Promise<TableDefinition> {
       
+        let tableDef = new DB.TableDefinition();
+
+        tableDef.tableName = tableName.toLowerCase();
+
+
+
+
+
+
         throw new Error("Method not implemented.");
     }
 
