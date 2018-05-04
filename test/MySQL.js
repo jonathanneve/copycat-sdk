@@ -1,18 +1,26 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const DB = require('../classes/DB');
-var MySQL = require('../classes/MySQLDriver');
+const mysql = require("../classes/MySQLDriver");
 var Config = {
     host: 'localhost',
     user: 'root',
     password: '',
     database: 'copycat'
 };
-var test = new MySQL.MySQLDriver(Config);
-test.connect();
-if (test.isConnected() === true) {
-    console.log('Connecté à la BDD :' + test.isConnected());
-    test.startTransaction();
-    test.executeSQL('Select * from test', false);
-    console.log('Transaction en cours : ' + test.inTransaction());
-    test.commit();
-}
+var test = new mysql.MySQLDriver(Config);
+test.connect()
+    .then(() => test.isConnected())
+    .then((connected) => {
+    console.log('Connecté à la BDD :' + connected);
+    return test.startTransaction();
+})
+    .then(() => test.executeSQL('INSERT INTO test (id, name) VALUES (NULL, azerty);', false))
+    .then(() => test.inTransaction())
+    .then((inTR) => {
+    console.log('Transaction en cours : ' + inTR);
+    return test.commit();
+})
+    .then(() => console.log('Terminé'))
+    .catch((err) => console.log(err));
 //# sourceMappingURL=MySQL.js.map

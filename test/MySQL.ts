@@ -1,5 +1,5 @@
 const DB = require('../classes/DB');
-var MySQL = require('../classes/MySQLDriver');
+import * as mysql from '../classes/MySQLDriver';
 
 var Config = {
     host: 'localhost',
@@ -8,21 +8,29 @@ var Config = {
     database: 'copycat'
 }
 
-var test = new MySQL.MySQLDriver(Config);
+var test = new mysql.MySQLDriver(Config);
 
-// test.connect()
-if (test.isConnected() === true){
-    console.log('Connecté à la BDD :' + test.isConnected());
-    
-    test.startTransaction()
+test.connect()
+    .then(() => test.isConnected())
+    .then((connected) => {
+        console.log('Connecté à la BDD :' + connected);
+        return test.startTransaction();
+    })
+    .then(() => test.executeSQL('INSERT INTO test (id, name) VALUES (NULL, azerty);' ,false))
+    .then(() => test.inTransaction())
+    .then((inTR) =>{ 
+        console.log('Transaction en cours : ' + inTR);
+        return test.commit();
+    })
+    .then(() => console.log('Terminé'))
+    .catch((err) => console.log(err));
 
-    test.executeSQL('Select * from test',false)
 
-    console.log('Transaction en cours : ' + test.inTransaction());
 
-    test.commit();
 
-}
+
+
+
 
 
 

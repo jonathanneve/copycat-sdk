@@ -22,10 +22,6 @@ class MySQLDriver extends SQLDriver_1.SQLDriver {
         this.connected = false;
         this.transactionActive = false;
         this.connection = MySQL.createConnection(Config);
-        // this.connection.connect(function(err) {
-        //     if (err) throw err;
-        //     console.log("Connected!");
-        // });
     }
     isConnected() {
         return __awaiter(this, void 0, void 0, function* () {

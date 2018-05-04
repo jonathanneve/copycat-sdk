@@ -27,14 +27,14 @@ export abstract class SQLDriver extends Driver {
     }
 
     //Basic SQL functions
-    protected abstract isConnected(): Promise<boolean>;
-    protected abstract connect(): Promise<void>;
-    protected abstract disconnect(): Promise<void>;
-    protected abstract inTransaction(): Promise<boolean>;
-    protected abstract startTransaction(): Promise<void>;
-    protected abstract commit(): Promise<void>;
-    protected abstract rollback(): Promise<void>;
-    protected abstract executeSQL(sql: string, autocreateTR: boolean, fetchResultSet?: boolean, 
+    public abstract isConnected(): Promise<boolean>;
+    public abstract connect(): Promise<void>;
+    public abstract disconnect(): Promise<void>;
+    public abstract inTransaction(): Promise<boolean>;
+    public abstract startTransaction(): Promise<void>;
+    public abstract commit(): Promise<void>;
+    public abstract rollback(): Promise<void>;
+    public abstract executeSQL(sql: string, autocreateTR: boolean, fetchResultSet?: boolean, 
         callback?: (record: DB.Record) => Promise<boolean | void>,
         params?: Object[]): Promise<boolean>;
     

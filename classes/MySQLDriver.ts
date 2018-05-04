@@ -19,36 +19,33 @@ export class MySQLDriver extends SQLDriver {
         });
 
         this.connection = MySQL.createConnection(Config);        
-        this.connection.connect(function(err) {
-            if (err) throw err;
-            console.log("Connected!");
-        });
+    
     }
     
         
-    protected async isConnected(): Promise<boolean> {
+    public async isConnected(): Promise<boolean> {
         return this.connected;
     }
-    protected async connect(): Promise<void> {
+    public async connect(): Promise<void> {
         await this.connection.connect();
         this.connected = true;
     }
-    protected async disconnect(): Promise<void> {
+    public async disconnect(): Promise<void> {
         await this.connection.end();
         this.connected = false;
     }
-    protected async inTransaction(): Promise<boolean> {
+    public async inTransaction(): Promise<boolean> {
         return this.transactionActive;
     }
-    protected async startTransaction(): Promise<void> {
+    public async startTransaction(): Promise<void> {
         await this.connection.query("BEGIN");
         this.transactionActive = true;
     }
-    protected async commit(): Promise<void> {
+    public async commit(): Promise<void> {
         await this.connection.query("COMMIT");
         this.transactionActive = false;
     }
-    protected async rollback(): Promise<void> {
+    public async rollback(): Promise<void> {
         await this.connection.query("ROLLBACK");
         this.transactionActive = false;
     }
