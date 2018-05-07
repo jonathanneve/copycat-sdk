@@ -78,6 +78,8 @@ class MySQLDriver extends SQLDriver_1.SQLDriver {
                 }
                 let query = new Promise((resolve, reject) => {
                     this.connection.query(sql, (err, results, fields) => {
+                        if (err)
+                            throw new Error(err.message);
                         if (fetchResultSet) {
                             if (callback) {
                                 if (results && results.length > 0) {
@@ -88,7 +90,7 @@ class MySQLDriver extends SQLDriver_1.SQLDriver {
                                         for (let field of fields) {
                                             let fieldname = field.name;
                                             let f = record.addField(fieldname);
-                                            f.value = results[resultIndex].fieldname;
+                                            f.value = results[resultIndex][fieldname];
                                             fieldIndex++;
                                         }
                                         callback(record).then((result) => {
@@ -112,7 +114,7 @@ class MySQLDriver extends SQLDriver_1.SQLDriver {
                                 }
                             }
                             else {
-                                resolve(results.length > 0);
+                                resolve((results && results.length > 0));
                             }
                         }
                         else {
@@ -139,7 +141,9 @@ class MySQLDriver extends SQLDriver_1.SQLDriver {
         throw new Error("Method not implemented.");
     }
     tableExists(tableName) {
-        throw new Error("Method not implemented.");
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.query('SELECT table_name FROM information_schema.tables WHERE table_schema IN (\'copycat\') AND table_name= ?', null, [tableName.toLowerCase()]);
+        });
     }
     createTable(table) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -148,7 +152,7 @@ class MySQLDriver extends SQLDriver_1.SQLDriver {
                 + ((table.primaryKeys.length > 0) ? ", primary key (" + table.primaryKeys.map(pk => '"' + pk.trim().toLowerCase() + '"').join(', ') + ")" : "")
                 + ")";
             this.exec(tableDefSQL);
-            throw new Error("Method not implemented.");
+            return tableDefSQL;
         });
     }
     listPrimaryKeyFields(tableName) {

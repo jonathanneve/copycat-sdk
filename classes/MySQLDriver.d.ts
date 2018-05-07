@@ -18,7 +18,7 @@ export declare class MySQLDriver extends SQLDriver {
     rollback(): Promise<void>;
     executeSQL(sql: string, autocreateTR: boolean, fetchResultSet?: boolean, callback?: (record: DB.Record) => Promise<boolean | void>, params?: Object[]): Promise<boolean>;
     protected dropTable(tableName: string): Promise<void>;
-    protected tableExists(tableName: string): Promise<boolean>;
+    tableExists(tableName: string): Promise<boolean>;
     createTable(table: TableDefinition): Promise<string>;
     listPrimaryKeyFields(tableName: string): Promise<string[]>;
     protected customMetadataExists(objectName: string, objectType: string): Promise<boolean>;

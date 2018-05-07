@@ -65,7 +65,10 @@ export class MySQLDriver extends SQLDriver {
             }
             
             let query = new Promise<boolean>((resolve, reject) =>{
-                this.connection.query(sql,(err, results, fields)=>{                
+                this.connection.query(sql,(err, results, fields)=>{  
+                    if (err) 
+                        throw new Error(err.message);
+
                     if (fetchResultSet) {
                         if (callback) {
                            if(results && results.length > 0) {            
@@ -76,7 +79,7 @@ export class MySQLDriver extends SQLDriver {
                                     for (let field of fields) {
                                         let fieldname = field.name
                                         let f: DB.Field = record.addField(fieldname)
-                                        f.value = results[resultIndex].fieldname
+                                        f.value = results[resultIndex][fieldname];
                                         fieldIndex++
                                     }
                                     callback(record).then((result) => {
@@ -100,7 +103,7 @@ export class MySQLDriver extends SQLDriver {
                             }
                         }
                         else{ 
-                            resolve(results.length > 0);
+                            resolve((results && results.length > 0));
                         }           
                     }
                     else{
@@ -126,16 +129,17 @@ export class MySQLDriver extends SQLDriver {
         this.exec('DROP TABLE IF EXISTS' + tableName.toLowerCase() + ';');
         throw new Error("Method not implemented.");
     }
-    protected tableExists(tableName: string): Promise<boolean> {
-        throw new Error("Method not implemented.");
+    public async tableExists(tableName: string): Promise<boolean> {
+        return await this.query('SELECT table_name FROM information_schema.tables WHERE table_schema IN (\'copycat\') AND table_name= ?', null, [tableName.toLowerCase()]);
     }
+
     public async createTable(table: TableDefinition): Promise<string> {  
         let tableDefSQL = 'CREATE TABLE IF NOT EXISTS "' + table.tableName.toLowerCase() + '" ( ' 
         + table.fieldDefs.join(', ') 
         + ((table.primaryKeys.length > 0)? ", primary key (" + table.primaryKeys.map(pk => '"' + pk.trim().toLowerCase() + '"').join(', ') + ")": "")
         + ")";
-        this.exec(tableDefSQL)
-        throw new Error("Method not implemented.");
+        this.exec(tableDefSQL);
+        return tableDefSQL;
     }
 
     listPrimaryKeyFields(tableName: string): Promise<string[]> {
@@ -208,13 +212,27 @@ export class MySQLDriver extends SQLDriver {
 
         tableDef.tableName = tableName.toLowerCase();
 
-
-
-
-
-
         throw new Error("Method not implemented.");
     }
+
+    async updateTable(tableDef: DB.TableDefinition): Promise<string> {        
+        
+        let existingTable = await this.getTableDef(tableDef.tableName, false);
+        let fieldDefs: string[] = []; 
+        tableDef.fieldDefs.forEach((field) => {
+            if (!existingTable.fieldDefs.find((f) => (f.fieldName.toLowerCase() == field.fieldName.toLowerCase()))) {
+                let fieldDef = this.getFieldDef(field);
+                fieldDefs.push('ADD ' + fieldDef);
+            }    
+        });
+        let tableDefSQL = 'ALTER TABLE "' + tableDef.tableName.toLowerCase() + '" ' 
+            + fieldDefs.join(', ')    
+        console.log('altering table: ' + tableDefSQL);
+        this.exec(tableDefSQL);
+        this.commit();
+        return tableDefSQL;
+    }
+
 
     protected getFieldType(sqlType: number): DB.DataType {
         throw new Error("Method not implemented.");
