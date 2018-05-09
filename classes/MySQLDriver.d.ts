@@ -1,6 +1,6 @@
 import * as DB from './DB';
 import { SQLDriver } from "./SQLDriver";
-import { TableDefinition, CustomMetadataDefinition, DataType } from "./DB";
+import { CustomMetadataDefinition, DataType } from "./DB";
 import { TableOptions } from "../interfaces/Nodes";
 import { DataRow } from "./Driver";
 import * as MySQL from 'mysql';
@@ -17,9 +17,9 @@ export declare class MySQLDriver extends SQLDriver {
     commit(): Promise<void>;
     rollback(): Promise<void>;
     executeSQL(sql: string, autocreateTR: boolean, fetchResultSet?: boolean, callback?: (record: DB.Record) => Promise<boolean | void>, params?: Object[]): Promise<boolean>;
-    protected dropTable(tableName: string): Promise<void>;
+    dropTable(tableName: string): Promise<void>;
     tableExists(tableName: string): Promise<boolean>;
-    createTable(table: TableDefinition): Promise<string>;
+    createTable(tableDef: DB.TableDefinition): Promise<string>;
     listPrimaryKeyFields(tableName: string): Promise<string[]>;
     protected customMetadataExists(objectName: string, objectType: string): Promise<boolean>;
     protected createCustomMetadata(metadata: CustomMetadataDefinition): Promise<void>;
@@ -33,7 +33,8 @@ export declare class MySQLDriver extends SQLDriver {
     protected getDataTypesOfFields(tableName: string, keyName: string[]): Promise<DataType[]>;
     protected parseFieldValue(dataType: DataType, fieldValue: string): Promise<Object>;
     listTables(): Promise<string[]>;
-    getTableDef(tableName: string, fullFieldDefs: boolean): Promise<TableDefinition>;
+    getTableDef(tableName: string, fullFieldDefs: boolean): Promise<DB.TableDefinition>;
+    updateTable(tableDef: DB.TableDefinition): Promise<string>;
     protected getFieldType(sqlType: number): DB.DataType;
-    createOrUpdateTable(table: TableDefinition): Promise<string>;
+    createOrUpdateTable(tableDef: DB.TableDefinition): Promise<string>;
 }

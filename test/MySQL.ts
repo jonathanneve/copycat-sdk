@@ -1,14 +1,34 @@
 import * as mysql from '../classes/MySQLDriver';
 import * as DB from '../classes/DB';
 
-var Config = {
+let Config = {
     host: 'localhost',
     user: 'root',
     password: '',
     database: 'copycat'
 }
 
-var test = new mysql.MySQLDriver(Config);
+let test = new mysql.MySQLDriver(Config);
+
+let newTable = new DB.TableDefinition();
+let updateTable = new DB.TableDefinition();
+let fieldNewTable = new DB.FieldDefinition;
+let updatefieldNewTable = new DB.FieldDefinition;
+
+fieldNewTable.fieldName = 'test'
+fieldNewTable.dataType = DB.DataType.String
+newTable.tableName = 'NewTable';
+newTable.fieldDefs = [fieldNewTable];
+newTable.primaryKeys = ['id'];
+
+updatefieldNewTable.fieldName = 'test'
+updatefieldNewTable.dataType = DB.DataType.Integer
+updateTable.tableName = 'NewTable';
+updateTable.fieldDefs = [updatefieldNewTable];
+
+
+
+
 
 test.connect()
     .then(() => test.isConnected())
@@ -27,6 +47,20 @@ test.connect()
     .then(()=> test.tableExists('test'))
     .then((tableExist)=> {
         console.log('la table test exist : ' + tableExist);
+    })
+    .then(()=> test.dropTable('NewTable'))
+    .then(()=> test.createTable(newTable))
+    .then((result)=> {
+        console.log('Sql create table : ' + result)
+    })
+    .then(()=> test.listTables())
+    .then((listTables)=> {
+        console.log('liste des tables : ' + listTables);
+    })
+    .then(()=> test.updateTable(updateTable))
+    .then(()=> test.listTables())
+    .then((listTables)=> {
+        console.log('liste des tables : ' + listTables);
     })
     .then(() => test.inTransaction())
     .then((inTR) =>{ 

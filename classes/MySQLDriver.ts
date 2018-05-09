@@ -56,16 +56,8 @@ export class MySQLDriver extends SQLDriver {
             await this.startTransaction();
             
         try {
-            if (params && params.length > 0) {
-                //Preprocess SQL text to change param markers from ? to $1, $2, etc
-                let paramIndex = 1;
-                sql = sql.replace(/\?/g, (substr) => {
-                    return "$" + paramIndex++;
-                })
-            }
-            
             let query = new Promise<boolean>((resolve, reject) =>{
-                this.connection.query(sql,(err, results, fields)=>{  
+                this.connection.query(sql, params, (err, results, fields)=>{  
                     if (err) 
                         throw new Error(err.message);
 
@@ -125,20 +117,28 @@ export class MySQLDriver extends SQLDriver {
             throw E;
         }        
     }
-    protected dropTable(tableName: string): Promise<void> {
-        this.exec('DROP TABLE IF EXISTS' + tableName.toLowerCase() + ';');
-        throw new Error("Method not implemented.");
+    public dropTable(tableName: string): Promise<void> {
+        this.exec('DROP TABLE IF EXISTS ' + tableName.toLowerCase() + ';');
+        return
     }
     public async tableExists(tableName: string): Promise<boolean> {
         return await this.query('SELECT table_name FROM information_schema.tables WHERE table_schema IN (\'copycat\') AND table_name= ?', null, [tableName.toLowerCase()]);
     }
 
-    public async createTable(table: TableDefinition): Promise<string> {  
-        let tableDefSQL = 'CREATE TABLE IF NOT EXISTS "' + table.tableName.toLowerCase() + '" ( ' 
-        + table.fieldDefs.join(', ') 
-        + ((table.primaryKeys.length > 0)? ", primary key (" + table.primaryKeys.map(pk => '"' + pk.trim().toLowerCase() + '"').join(', ') + ")": "")
-        + ")";
-        this.exec(tableDefSQL);
+
+    async createTable(tableDef: DB.TableDefinition): Promise<string>{
+        let fieldDefs: string[] = [];
+        tableDef.fieldDefs.forEach((field) => {
+            let fieldDef = this.getFieldDef(field);
+            fieldDefs.push(fieldDef);
+        });
+        let tableDefSQL = 'CREATE TABLE ' + tableDef.tableName.toLowerCase() + ' ( ' 
+            + fieldDefs.join(', ') 
+            + ((tableDef.primaryKeys.length > 0)? ", " + tableDef.primaryKeys.map(pk => pk.trim().toLowerCase() ).join(', ') + " int(6)  UNSIGNED AUTO_INCREMENT PRIMARY KEY": "")
+            + ")";
+        console.log('creating table: ' + tableDefSQL);
+        await this.exec(tableDefSQL);
+        await this.commit();
         return tableDefSQL;
     }
 
@@ -166,7 +166,7 @@ export class MySQLDriver extends SQLDriver {
     protected getFieldDef(field: DB.FieldDefinition): string {
         let fieldType: string;
         switch (field.dataType) {
-            case DB.DataType.String: fieldType = 'varchar(' + field.length.toString() + ")"; break;
+            case DB.DataType.String: fieldType = 'varchar(50)'; break;
             case DB.DataType.FixedChar: fieldType = 'char(' + field.length.toString() + ")"; break;
             case DB.DataType.Integer: fieldType = 'int'; break;
             case DB.DataType.Int64: fieldType = 'bigint'; break;
@@ -180,9 +180,8 @@ export class MySQLDriver extends SQLDriver {
             case DB.DataType.DateTime: fieldType = 'timestamp'; break;
             case DB.DataType.Time: fieldType = 'time'; break;
             case DB.DataType.SmallInt: fieldType = 'smallint'; break;
-            default: throw new Error('Data type ' + DB.DataType[field.dataType] + " (" + field.dataTypeStr +") not handle by Firebird!");
         }
-        return '"' + field.fieldName.toLowerCase().trim() + '" ' + fieldType + (field.notNull? " not null": "");
+        return  field.fieldName.toLowerCase().trim() + ' ' + fieldType + (field.notNull? " not null": "");
     }
     protected setReplicatingNode(origNode: string): Promise<void> {
         throw new Error("Method not implemented.");
@@ -198,21 +197,36 @@ export class MySQLDriver extends SQLDriver {
     }
     async listTables(): Promise<string[]> {
         let tables: string[] = [];
-        await this.query('SELECT table_name FROM information_schema.tables ' +
-            "WHERE table_schema NOT IN ('pg_catalog', 'information_schema') " +
-            "and table_type in ('BASE TABLE','LOCAL TEMPORARY') ORDER BY table_name", null, null, async (tableRec: DB.Record) => {
+        await this.query('SELECT table_name FROM information_schema.tables' +  
+        " WHERE table_schema IN ('copycat', 'information_schema')" + 
+        " and table_type in ('BASE TABLE','LOCAL TEMPORARY') ORDER BY table_name", null, null, async (tableRec: DB.Record) => {
                 //let tableDef = await this.getTableDef(<string>tableRec.fieldByName('table_name').value, fullFieldDefs);
                 tables.push(<string>tableRec.fieldByName('table_name').value);
             });
         return tables;
     }
-    public async getTableDef(tableName: string, fullFieldDefs: boolean): Promise<TableDefinition> {
-      
+    public async getTableDef(tableName: string, fullFieldDefs: boolean) : Promise<DB.TableDefinition> {
         let tableDef = new DB.TableDefinition();
-
         tableDef.tableName = tableName.toLowerCase();
-
-        throw new Error("Method not implemented.");
+        tableDef.fieldDefs = [];
+        await this.query("SELECT column_name, is_nullable FROM information_schema.columns c WHERE table_name = ?" +
+            " AND EXISTS (SELECT * FROM information_schema.tables t WHERE table_type = 'BASE TABLE' AND c.table_name = t.table_name)", 
+            null, [tableDef.tableName], async (fieldRec: DB.Record) => {
+                let fieldDef = new DB.FieldDefinition();
+                fieldDef.fieldName = (<string>fieldRec.fieldByName('column_name').value).toLowerCase();
+                if (fullFieldDefs) {
+                    fieldDef.dataType = DB.DataType.String;
+                    fieldDef.notNull = (fieldRec.fieldByName('is_nullable').value == 'NO');
+                    fieldDef.precision = 0;
+                    fieldDef.scale = 0;
+                    fieldDef.length = 0;
+                    fieldDef.autoInc = false;
+                }
+                tableDef.fieldDefs.push(fieldDef);                
+            });
+        if (fullFieldDefs)
+            tableDef.primaryKeys = []
+        return tableDef;
     }
 
     async updateTable(tableDef: DB.TableDefinition): Promise<string> {        
@@ -222,10 +236,14 @@ export class MySQLDriver extends SQLDriver {
         tableDef.fieldDefs.forEach((field) => {
             if (!existingTable.fieldDefs.find((f) => (f.fieldName.toLowerCase() == field.fieldName.toLowerCase()))) {
                 let fieldDef = this.getFieldDef(field);
-                fieldDefs.push('ADD ' + fieldDef);
-            }    
+                fieldDefs.push(' ADD ' + fieldDef);
+            }
+            if (existingTable.fieldDefs.find((f) => (f.fieldName.toLowerCase() == field.fieldName.toLowerCase()))) {
+                let fieldDef = this.getFieldDef(field);
+                fieldDefs.push(' MODIFY COLUMN ' + fieldDef);
+            } 
         });
-        let tableDefSQL = 'ALTER TABLE "' + tableDef.tableName.toLowerCase() + '" ' 
+        let tableDefSQL = 'ALTER TABLE ' + tableDef.tableName.toLowerCase() 
             + fieldDefs.join(', ')    
         console.log('altering table: ' + tableDefSQL);
         this.exec(tableDefSQL);
@@ -237,7 +255,11 @@ export class MySQLDriver extends SQLDriver {
     protected getFieldType(sqlType: number): DB.DataType {
         throw new Error("Method not implemented.");
     }
-    createOrUpdateTable(table: TableDefinition): Promise<string> {
-        throw new Error("Method not implemented.");
+
+    async createOrUpdateTable(tableDef: DB.TableDefinition): Promise<string> {
+        if (await this.tableExists(tableDef.tableName))
+            return await this.updateTable(tableDef)
+        else
+            return await this.createTable(tableDef);    
     }
 }
