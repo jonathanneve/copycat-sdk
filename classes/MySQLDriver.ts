@@ -167,7 +167,6 @@ export class MySQLDriver extends SQLDriver {
         let fieldType: string;
         switch (field.dataType) {
             case DB.DataType.String: fieldType = 'varchar(50)'; break;
-            case DB.DataType.FixedChar: fieldType = 'char(' + field.length.toString() + ")"; break;
             case DB.DataType.Integer: fieldType = 'int'; break;
             case DB.DataType.Int64: fieldType = 'bigint'; break;
             case DB.DataType.AutoInc: fieldType = 'auto_increment'; break;
