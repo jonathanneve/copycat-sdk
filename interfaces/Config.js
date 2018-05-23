@@ -3,6 +3,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 class ConfigType {
 }
 exports.ConfigType = ConfigType;
+var ConfigCreationStatus;
+(function (ConfigCreationStatus) {
+    ConfigCreationStatus[ConfigCreationStatus["CreatingDB"] = 0] = "CreatingDB";
+    ConfigCreationStatus[ConfigCreationStatus["CreatingNodes"] = 1] = "CreatingNodes";
+    ConfigCreationStatus[ConfigCreationStatus["Created"] = 2] = "Created";
+})(ConfigCreationStatus = exports.ConfigCreationStatus || (exports.ConfigCreationStatus = {}));
+;
 class Configuration {
     constructor() {
         this.recordVersionsToKeepInCloud = 0;

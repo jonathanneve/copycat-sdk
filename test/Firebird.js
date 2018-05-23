@@ -440,6 +440,7 @@ class FirebirdDriver extends SQLDriver_1.SQLDriver {
             });
             let tableDefSQL = 'ALTER TABLE ' + tableDef.tableName + ' ( '
                 + fieldDefs.join(', ')
+                // + ((tableDef.primaryKeys.length > 0)? ", primary key (" + tableDef.primaryKeys.join(', ') + ")": "")
                 + ")";
             console.log('altering table: ' + tableDefSQL);
             yield this.exec(tableDefSQL);

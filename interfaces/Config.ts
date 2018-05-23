@@ -7,6 +7,7 @@ export class ConfigType{
     product: string;
     edition?: string;
 }
+export enum ConfigCreationStatus { CreatingDB, CreatingNodes, Created };
 
 export class Configuration{
     configID: number;
@@ -15,7 +16,7 @@ export class Configuration{
     username: string;
     description: string;
     recordVersionsToKeepInCloud: number = 0;
-
+    status : ConfigCreationStatus;  
     constructor() {
         this.configType = new ConfigType();
     }
@@ -31,5 +32,6 @@ export class Configuration{
 export class ConfigurationStatus{
     configID: number;
     alertsLevels: { level: AlertLevel, nb: number }[] = [];
-    lastReplication: Date;    
+    lastReplication: Date;
+    status : ConfigCreationStatus;    
 }
