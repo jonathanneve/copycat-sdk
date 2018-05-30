@@ -10,7 +10,7 @@ export class ConfigType{
 export enum ConfigCreationStatus { CreatingDB, CreatingNodes, Created };
 
 export class Configuration{
-    configID: number;
+    configID: string;
     name: string;
     configType: ConfigType;
     username: string;
@@ -30,7 +30,7 @@ export class Configuration{
 }
 
 export class ConfigurationStatus{
-    configID: number;
+    configID: string;
     alertsLevels: { level: AlertLevel, nb: number }[] = [];
     lastReplication: Date;
     status : ConfigCreationStatus;    
