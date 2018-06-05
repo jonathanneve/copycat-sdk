@@ -25,15 +25,23 @@ export class xls {
     });
   }
 
-  public VerifModification(pathSource: string, pathCopy) {
+  public VerifModification(pathSource: string, pathCopy: string) : boolean {
+    let dateSource : Date;
+    let dateCopy : Date;
+    let sizeSource : number;
+    let sizeCopy : number;
+    let result : boolean;
     fs.stat(pathSource, function(error, stats) {
-      let dateSource = stats.mtime;
-      let sizeSource = stats.size
+      dateSource = stats.mtime;
+      sizeSource = stats.size
     });
     fs.stat(pathCopy, function(error, stats) {
-      let dateCopy = stats.mtime;
-      let sizeCopy = stats.size;
+      dateCopy = stats.mtime;
+      sizeCopy = stats.size;
     });
-
+    if (dateSource != dateCopy && sizeSource != sizeCopy) {
+       
+    }
+    return result;
   }
 }
