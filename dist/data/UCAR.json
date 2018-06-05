@@ -1,0 +1,27 @@
+{
+    "id": 1,
+    "name": "UCAR",
+    "excludedTables": [],
+    "syncFrequency": 30,
+    "trackChanges": 1,
+    "metaDataCreated": "1",
+    "excludedFields": [],
+    "masterDB": {
+        "type": "Interbase",
+        "version": "FB2.5",
+        "name": "c:\\temp\\medicontrol.fdb",
+        "username": "SYSDBA",
+        "password": "masterkey",
+        "sqlDialect": 3,
+        "clientDll": "fbclient.dll"
+    },
+    "mirrorDB": {
+        "type": "Interbase",
+        "version": "FB2.5",
+        "name": "c:\\temp\\medicontrol_mirror.fdb",
+        "username": "SYSDBA",
+        "password": "masterkey",
+        "sqlDialect": 3,
+        "clientDll": "fbclient.dll"
+    }
+}

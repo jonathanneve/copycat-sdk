@@ -1,0 +1,65 @@
+[
+    {
+        "tableName": "CC$LOG",
+        "primaryKeys": ["CODE"],
+        "fieldDefs": [
+            {"fieldName": "CODE", "dataTypeStr": "Integer", "notNull": true},
+            {"fieldName": "LOGIN", "dataTypeStr": "String", "length": 50},
+            {"fieldName": "OPERATION_DATE", "dataTypeStr": "DateTime"},
+            {"fieldName": "TABLE_NAME", "dataTypeStr": "String", "length": 100},            
+            {"fieldName": "PRIMARY_KEY_FIELDS", "dataTypeStr": "String", "length": 500},
+            {"fieldName": "PRIMARY_KEY_VALUES", "dataTypeStr": "String", "length": 500},
+            {"fieldName": "CHANGE_NUMBER", "dataTypeStr": "Integer"},
+            {"fieldName": "SENT_FROM", "dataTypeStr": "String", "length": 50},
+            {"fieldName": "REPLICATION_STATE", "dataTypeStr": "String", "length": 20},
+            {"fieldName": "ERROR_MESSAGE", "dataTypeStr": "Memo"},
+            {"fieldName": "ERROR_CONTEXT", "dataTypeStr": "String", "length": 50},
+            {"fieldName": "OPERATION_TYPE", "dataTypeStr": "FixedChar", "length": 1},
+            {"fieldName": "TRANSACTION_NUMBER", "dataTypeStr": "Integer"}
+        ]          
+    },
+    {
+        "tableName": "CC$LOG_VALUES",
+        "primaryKeys": ["NODE_NAME", "CHANGE_NUMBER", "FIELD_NAME"],
+        "fieldDefs": [
+            {"fieldName": "NODE_NAME", "dataTypeStr": "String", "length": 50, "notNull": true},
+            {"fieldName": "CHANGE_NUMBER", "dataTypeStr": "Integer", "notNull": true},
+            {"fieldName": "FIELD_NAME", "dataTypeStr": "String", "length": 50, "notNull": true},
+            {"fieldName": "FIELD_TYPE", "dataTypeStr": "Integer"},
+            {"fieldName": "OLD_VALUE", "dataTypeStr": "String", "length": 250},
+            {"fieldName": "OLD_VALUE_BLOB", "dataTypeStr": "Blob"},
+            {"fieldName": "NEW_VALUE", "dataTypeStr": "String", "length": 250},
+            {"fieldName": "NEW_VALUE_BLOB", "dataTypeStr": "Blob"},
+            {"fieldName": "OLD_BLOB_NULL", "dataTypeStr": "FixedChar", "length": 1},
+            {"fieldName": "NEW_BLOB_NULL", "dataTypeStr": "FixedChar", "length": 1}
+        ]          
+    },
+    {
+        "tableName": "CC$USERS",
+        "primaryKeys": ["LOGIN"],
+        "fieldDefs": [
+            {"fieldName": "LOGIN", "dataTypeStr": "String", "length": 50, "notNull": true},
+            {"fieldName": "LIBELLE", "dataTypeStr": "String", "length": 50},
+            {"fieldName": "CONDITION_VALUE", "dataTypeStr": "String", "length": 200},
+            {"fieldName": "PASSWRD", "dataTypeStr": "String", "length": 100},
+            {"fieldName": "CONFIG_NAME", "dataTypeStr": "String", "length": 100}            
+        ]          
+    },
+    {
+        "tableName": "CC$BLOCKS",
+        "primaryKeys": ["TR_NUMBER", "CODE", "NODE_NAME"],
+        "fieldDefs": [
+            {"fieldName": "TR_NUMBER", "dataTypeStr": "Integer", "notNull": true},
+            {"fieldName": "CODE", "dataTypeStr": "Integer", "notNull": true},
+            {"fieldName": "NODE_NAME", "dataTypeStr": "String", "length": 50, "notNull": true}            
+        ]          
+    },
+    {
+        "tableName": "CC$TABLES",
+        "primaryKeys": ["TABLE_NAME"],
+        "fieldDefs": [
+            {"fieldName": "TABLE_NAME", "dataTypeStr": "String", "length": 50, "notNull": true},
+            {"fieldName": "COUNTER", "dataTypeStr": "Integer"}            
+        ]          
+    }       
+]

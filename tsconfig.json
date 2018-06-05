@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
-    "target": "es6",
+    "target": "es5",
     "module": "commonjs",
+    "outDir": "./dist",
     "sourceMap": true,
     "declaration": true,
     "moduleResolution": "node",
@@ -16,9 +17,9 @@
   },
   "include": [
     "classes/**/*.ts",
-    "classes/drivers/*.ts",
     "interfaces/**/*.ts",
-    "test/**/*.ts"
+    "test/**/*.ts",
+    "index.ts"
   ],
   "exclude": [
      "node_modules"
