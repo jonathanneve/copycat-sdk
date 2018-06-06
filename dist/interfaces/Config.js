@@ -6,6 +6,13 @@ var ConfigType = /** @class */ (function () {
     return ConfigType;
 }());
 exports.ConfigType = ConfigType;
+var ConfigCreationStatus;
+(function (ConfigCreationStatus) {
+    ConfigCreationStatus[ConfigCreationStatus["CreatingDB"] = 0] = "CreatingDB";
+    ConfigCreationStatus[ConfigCreationStatus["CreatingNodes"] = 1] = "CreatingNodes";
+    ConfigCreationStatus[ConfigCreationStatus["Created"] = 2] = "Created";
+})(ConfigCreationStatus = exports.ConfigCreationStatus || (exports.ConfigCreationStatus = {}));
+;
 var Configuration = /** @class */ (function () {
     function Configuration() {
         this.recordVersionsToKeepInCloud = 0;

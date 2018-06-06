@@ -18,7 +18,7 @@ export declare class ReplicationCycle {
 }
 export declare class ReplicationLogEvent {
     logEventID: string;
-    configID: number;
+    configID: string;
     nodeID: string;
     cycleID: string;
     transactionNumber?: number;

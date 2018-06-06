@@ -4,9 +4,9 @@ export declare enum AlertLevel {
     Error = 2,
 }
 export declare class Alert {
-    configID: number;
+    configID: string;
     alertID: number;
-    nodeID: number;
+    nodeID: string;
     level: AlertLevel;
     alertDate: Date;
     message: string;
