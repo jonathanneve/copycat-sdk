@@ -17,12 +17,15 @@
     "@types/debug": "0.0.29",
     "@types/node": "^10.3.1",
     "ts-node": "^3.2.0",
-    "typescript": "^2.0.6"
+    "typescript": "^2.8.3"
   },
   "dependencies": {
     "axios": "^0.18.0",
     "debug": "^2.2.0",
     "eventsource": "^1.0.5",
+    "mysql": "^2.15.0",
+    "shortid": "^2.2.8",
+    "typed-rest-client": "^0.11.0"
     "shortid": "^2.2.8"
   }
 }
