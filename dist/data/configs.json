@@ -1,0 +1,33 @@
+[
+	{
+		"id": 1,
+		"name": "Backup config",
+		"userID": 12345,
+		"nodeConfigs": [{
+							"name": "SOURCE",
+    						"description": "",
+							"replFrequency": 10,
+							"destinationNodeConfigs": [{"nodeConfigName":"CLOUD", 
+														"tables": [{
+															"tableName": "TEST",
+															"excludedFields": [],
+															"includedFields": []
+														}]}]
+						}, 
+						{
+							"name": "CLOUD",
+    						"description": "",
+							"replFrequency": 0,
+							"destinationNodeConfigs": []						
+						}],
+		"cloudDatabase": {
+			"driverName": "FirebirdDriver",
+			"database": "c:\\test_mirror.fdb",
+			"databaseVersion": "FB30",
+			"username" : "SYSDBA",
+			"password" : "masterkey",
+			"configName" : "1"
+		},
+		"recordVersionsToKeepInCloud": 0
+	}
+]

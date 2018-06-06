@@ -3,7 +3,7 @@ import { Driver, ReplicationBlock, DataRow } from "./Driver"
 import {Configuration} from '../interfaces/Config';
 import {Node} from '../interfaces/Nodes'
 import {ClientConfiguration} from '../interfaces/ClientConfig'
-import {RestClient, MAX_REQUEST_SIZE} from "./Drivers/Rest"
+import {RestClient, MAX_REQUEST_SIZE} from "./drivers/Rest"
 import {SQLDriver} from './SQLDriver'
 import * as shortid from "shortid"
 
@@ -40,7 +40,7 @@ export class Replicator {
         for (let f of row.fields) {
             if (!f.isNull() && ((f.dataType === DB.DataType.Blob) || (f.dataType === DB.DataType.Memo))) {                
                 let blobID = shortid.generate();
-                await this.cloudConnection.uploadBlob(<Buffer>f.value, blobID);
+                //await this.cloudConnection.uploadBlob(<Buffer>f.value, blobID);
                 f.value = blobID;
             }
             fields.push(f);

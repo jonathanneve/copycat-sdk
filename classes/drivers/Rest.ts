@@ -2,13 +2,10 @@ import {Driver, ReplicationBlock, DataRow, addDriver} from "../Driver"
 import {SQLDriver} from '../SQLDriver'
 import {Node} from "../../interfaces/Nodes"
 import * as DB from "../DB"
-import * as http from 'typed-rest-client/HttpClient';
-import * as rest from 'typed-rest-client/RestClient';
+import Axios, { AxiosRequestConfig } from "axios";
 import { ReplicationCycle } from "../../interfaces/Log"
-import * as SSE from "eventsource"
 //import { FirebirdDriver } from "./Firebird";
 
-console.log('rest');
 export const MAX_REQUEST_SIZE = 100000;
 
 interface ITransactionList {
@@ -25,24 +22,21 @@ export class RestClient extends Driver {
         return await this.doPost<ReplicationCycle>(this.baseURL + '/api/v1/node/repl/cycles/', null);
     }
 
-    private httpClient: http.HttpClient;
-    private restClient: rest.RestClient;
-    private requestOptions: rest.IRequestOptions;
+    private requestOptions: AxiosRequestConfig;
 
     constructor(public accessToken: string, public baseURL: string) {
         super();
-        this.httpClient = new http.HttpClient('');
-        this.restClient = new rest.RestClient('');
-
+        
         this.requestOptions = {
-            additionalHeaders: {
+            headers: {
                 "Authorization": 'JWT ' + this.accessToken,
                 "Content-Type": 'application/json'}
         }
     }
     
     callSSE(url: string, options: any, callback: (data: any) => Promise<any>): Promise<void> {
-        return new Promise<void>((resolve, reject) => {            
+        return null;
+       /* return new Promise<void>((resolve, reject) => {            
             let es = new SSE.EventSource(url, options);
             es.onmessage = (e) => {
                 if (e.id == "CLOSE") {
@@ -55,9 +49,10 @@ export class RestClient extends Driver {
             es.onerror = function() {
                 reject();
             }; 
-        })  
+        })  */
     }
 
+    /*
     async uploadBlob(value: Buffer, blobID: string): Promise<void> {
         let start = 0;
         let end = MAX_REQUEST_SIZE;
@@ -80,10 +75,10 @@ export class RestClient extends Driver {
             start = end;
             end = start + MAX_REQUEST_SIZE;            
         }        
-    }
+    }*/
 
     async getDataRows(tableName: string, callback: (row: DataRow) => Promise<boolean>): Promise<void> {
-        return this.callSSE(this.baseURL + '/api/v1/node/table/' + tableName + "/data", { headers: this.requestOptions.additionalHeaders }, callback);
+        return this.callSSE(this.baseURL + '/api/v1/node/table/' + tableName + "/data", { headers: this.requestOptions.headers }, callback);
         //let rows = await this.doGet<DataRow[]>(this.baseURL + '/api/v1/node/table/' + tableName + "/data");
     }
 
@@ -135,15 +130,15 @@ export class RestClient extends Driver {
     }    
 
     private async doGet<T>(url: string): Promise<T>{        
-        let res = await this.restClient.get<T>(url, this.requestOptions);      
-        if (res.result)
-            return res.result;
+        let res = await Axios.get<T>(url, this.requestOptions);      
+        if (res.data)
+            return res.data;
         else
-            throw new Error('Resource not found! HTTP result:' + res.statusCode);    
+            throw new Error('Resource not found! HTTP result:' + res.status);    
     }
     private async doPut<T>(url: string, obj: T): Promise<T>{
-        let res = await this.restClient.replace<T>(url, obj, this.requestOptions);                      
-        return res.result;
+        let res = await Axios.post<T>(url, obj, this.requestOptions);                      
+        return res.data;
         /*return new Promise<T>((resolve, reject) => {
             if (res.statusCode > 300)
                 reject('HTTP error ' + res.statusCode.toString());
@@ -152,8 +147,8 @@ export class RestClient extends Driver {
         });*/
     }
     private async doPost<T>(url: string, obj: T): Promise<T>{
-        let res = await this.restClient.create<T>(url, obj, this.requestOptions);                      
-        return res.result;
+        let res = await Axios.post<T>(url, obj, this.requestOptions);                      
+        return res.data;
         /*return new Promise<T>((resolve, reject) => {
             if (res.statusCode > 200)
                 reject('HTTP error ' + res.statusCode.toString());
@@ -163,14 +158,13 @@ export class RestClient extends Driver {
     }
 
     private async doPostEmpty(url: string): Promise<void> {
-        let res = await this.httpClient.post(url, '', this.requestOptions.additionalHeaders);
-        if (res.message.statusCode > 299)
-            throw new Error(url + ': post failed with HTTP code ' + res.message.statusCode.toString());    
+        let res = await Axios.post(url, '', this.requestOptions);
+        if (res.status > 299)
+            throw new Error(url + ': post failed with HTTP code ' + res.status.toString());    
     }
 
-    private async doDelete<T>(url: string): Promise<T>{
-        let res = await this.restClient.del<T>(url, this.requestOptions);                      
-        return res.result;
+    private async doDelete<T>(url: string): Promise<void>{
+        let res = await Axios.delete(url, this.requestOptions);                      
         /*return new Promise<T>((resolve, reject) => {
             if (res.statusCode != 200)
                 reject('HTTP error ' + res.statusCode.toString());
@@ -182,9 +176,9 @@ export class RestClient extends Driver {
     async initReplicationMetadata(): Promise<void> {
         //await this.restClient.create(this.baseURL + '/api/v1/node/init_repl', '', this.requestOptions)
         // doPost<string>(this.baseURL + '/api/v1/node/init_repl', '');   
-        let res = await this.httpClient.post(this.baseURL + '/api/v1/node/init_repl', '', this.requestOptions.additionalHeaders);
-        if (res.message.statusCode > 299)
-            throw new Error('initReplicationMetadata failed with HTTP code ' + res.message.statusCode.toString());    
+        let res = await Axios.post(this.baseURL + '/api/v1/node/init_repl', '', this.requestOptions);
+        if (res.status > 299)
+            throw new Error('initReplicationMetadata failed with HTTP code ' + res.status.toString());    
     }
 
     async clearReplicationMetadata(): Promise<void> {
