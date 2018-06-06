@@ -16,7 +16,7 @@ export class ReplicationOptions{
 }
 
 export class Node{
-    configID: number;
+    configID: string;
     nodeName: string; 
     accessToken: string;
     syncToCloud: ReplicationOptions = { replicate: true };
