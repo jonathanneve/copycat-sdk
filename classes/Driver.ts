@@ -1,5 +1,5 @@
 import * as DB from "./DB"
-import {IDriver} from '../interfaces/Driver'
+import {IDriver} from '../interfaces/IDriver'
 
 export class DataRow {
     code: number;
@@ -63,4 +63,3 @@ export var drivers: { [id: string]: typeof Driver} = {};
 export function addDriver(driverName: string, driverType: typeof Driver) {
     drivers[driverName] = driverType;
 }
-console.log('Driver module initialized')

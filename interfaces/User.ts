@@ -1,4 +1,4 @@
-export enum State { Pending, Activated};
+export enum UserState { Pending, Activated};
 
 
 export class User {
@@ -8,5 +8,5 @@ export class User {
     email: string;
     firstname: string;
     lastname: string;
-    state : State;
+    state : UserState;
 }
