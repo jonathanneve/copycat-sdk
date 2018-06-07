@@ -1,7 +1,10 @@
 export interface ListenerTableDef {
-    fieldNames : string[]
+    tableNames : string;
+    fieldNames : string[];
 }
 
 export interface Listener {
-    tableNames: ListenerTableDef[];
+    _id: any;
+    tables: ListenerTableDef[];
+    type: string;
 }
